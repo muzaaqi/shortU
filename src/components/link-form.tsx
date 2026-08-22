@@ -1,14 +1,24 @@
 /**
  * URL Shortening input form powered by TanStack Form and Zod.
- * Supports instant shortening, custom slug aliases, and displays
- * the signature terminal result readout with QR code preview and copy action.
+ * Supports instant shortening, custom slug aliases (authenticated only), clipboard paste,
+ * and displays the signature terminal result readout with QR code preview and copy action.
  * Used by: src/routes/index.tsx, src/routes/dashboard.tsx
  */
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Check, Copy, ExternalLink, Link as LinkIcon, RotateCcw, Sparkles } from "lucide-react";
+import {
+  Check,
+  Clipboard,
+  Copy,
+  ExternalLink,
+  Link as LinkIcon,
+  Lock,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { z } from "zod";
+import { AuthModal } from "~/components/auth-modal";
 import { QrPreview } from "~/components/qr-preview";
 import { Button } from "~/components/ui/button";
 import {
@@ -24,6 +34,7 @@ import {
   InputGroupInput,
 } from "~/components/ui/input-group";
 import { Spinner } from "~/components/ui/spinner";
+import { useSession } from "~/lib/auth";
 import { RESERVED_SLUGS, SLUG_REGEX } from "~/lib/slugify";
 import { createLink } from "~/server/functions/links";
 
@@ -53,7 +64,9 @@ const slugSchema = z
   );
 
 export const LinkForm = memo(function LinkForm() {
+  const { data: session } = useSession();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [createdLink, setCreatedLink] = useState<{
     slug: string;
@@ -101,6 +114,19 @@ export const LinkForm = memo(function LinkForm() {
     },
   });
 
+  const handlePaste = async () => {
+    try {
+      if (navigator.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          form.setFieldValue("url", text.trim());
+        }
+      }
+    } catch {
+      // Clipboard read permission might be restricted
+    }
+  };
+
   const handleCopy = useCallback(() => {
     if (!createdLink) return;
     if (navigator.clipboard?.writeText) {
@@ -124,6 +150,8 @@ export const LinkForm = memo(function LinkForm() {
     form.reset();
   };
 
+  const isAuthenticated = Boolean(session?.user);
+
   return (
     <div className="w-full max-w-xl mx-auto space-y-6">
       <form
@@ -141,22 +169,34 @@ export const LinkForm = memo(function LinkForm() {
                 field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field data-invalid={isInvalid} className="text-left">
-                  <FieldLabel htmlFor="url-input">
-                    Enter your destination URL
-                  </FieldLabel>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <FieldLabel htmlFor="url-input" className="text-sm font-semibold text-foreground">
+                      Destination Web Address
+                    </FieldLabel>
+                    {!field.state.value && (
+                      <button
+                        type="button"
+                        onClick={handlePaste}
+                        className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Clipboard className="size-3" />
+                        <span>Paste</span>
+                      </button>
+                    )}
+                  </div>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <InputGroup className="h-12 flex-1">
+                    <InputGroup className="h-12 flex-1 bg-card border-border shadow-2xs">
                       <InputGroupAddon align="inline-start">
-                        <LinkIcon className="size-4" />
+                        <LinkIcon className="size-4 text-muted-foreground" />
                       </InputGroupAddon>
                       <InputGroupInput
                         id="url-input"
-                        placeholder="https://example.com/very-long-url..."
+                        placeholder="https://example.com/long-page-url..."
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="text-base"
+                        className="text-base font-sans"
                       />
                     </InputGroup>
                     <form.Subscribe
@@ -168,7 +208,7 @@ export const LinkForm = memo(function LinkForm() {
                           disabled={
                             !canSubmit || isSubmitting || mutation.isPending
                           }
-                          className="h-12 px-6 bg-primary text-primary-foreground font-semibold shadow-xs hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap"
+                          className="h-12 px-6 bg-primary text-primary-foreground font-semibold shadow-xs hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap min-w-[140px]"
                         >
                           {isSubmitting || mutation.isPending ? (
                             <>
@@ -189,18 +229,30 @@ export const LinkForm = memo(function LinkForm() {
           </form.Field>
 
           <div className="text-left">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors cursor-pointer py-1"
-            >
-              <Sparkles className="size-3 text-primary" />
-              {showAdvanced
-                ? "Hide custom alias options"
-                : "Customize link slug (optional)"}
-            </button>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors cursor-pointer py-1"
+              >
+                <Sparkles className="size-3 text-primary" />
+                {showAdvanced
+                  ? "Hide custom alias options"
+                  : "Customize link slug (optional)"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors cursor-pointer py-1"
+                title="Sign in to create custom slug aliases"
+              >
+                <Lock className="size-3 text-muted-foreground" />
+                <span>Custom slug alias (Sign in to unlock)</span>
+              </button>
+            )}
 
-            {showAdvanced && (
+            {isAuthenticated && showAdvanced && (
               <div className="mt-2 p-3.5 rounded-lg bg-secondary/50 border border-border space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
                 <form.Field name="customSlug">
                   {(field) => {
@@ -208,10 +260,10 @@ export const LinkForm = memo(function LinkForm() {
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor="custom-slug" className="text-xs font-medium">
+                        <FieldLabel htmlFor="custom-slug" className="text-xs font-medium text-foreground">
                           Custom Slug
                         </FieldLabel>
-                        <InputGroup className="h-9 text-xs font-mono">
+                        <InputGroup className="h-9 text-xs font-mono bg-card">
                           <InputGroupAddon
                             align="inline-start"
                             className="text-xs text-muted-foreground font-mono"
@@ -230,7 +282,7 @@ export const LinkForm = memo(function LinkForm() {
                             className="font-mono text-xs"
                           />
                         </InputGroup>
-                        <FieldDescription>
+                        <FieldDescription className="text-[11px] text-muted-foreground">
                           3–50 lowercase characters or hyphens.
                         </FieldDescription>
                         {isInvalid && (
@@ -305,7 +357,7 @@ export const LinkForm = memo(function LinkForm() {
           <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
             <Button
               onClick={handleCopy}
-              className="flex-1 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white font-medium gap-2 rounded-lg cursor-pointer h-10"
+              className="flex-1 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white font-medium gap-2 rounded-lg cursor-pointer h-10 transition-all active:scale-[0.98]"
             >
               {copied ? (
                 <>
@@ -330,6 +382,9 @@ export const LinkForm = memo(function LinkForm() {
           </div>
         </div>
       )}
+
+      {/* Auth Modal Trigger for Locked Features */}
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </div>
   );
 });
