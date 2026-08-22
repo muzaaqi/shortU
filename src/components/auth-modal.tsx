@@ -3,6 +3,7 @@
  * Allows users to authenticate with Google or GitHub via Better Auth.
  * Used by: src/components/user-nav.tsx, src/routes/dashboard.tsx
  */
+import { ShieldCheck } from "lucide-react";
 import { memo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -56,7 +57,7 @@ export const AuthModal = memo(function AuthModal({
             variant="outline"
             onClick={() => handleOAuthSignIn("google")}
             disabled={loadingProvider !== null}
-            className="w-full h-11 justify-center gap-3 font-medium cursor-pointer border-border hover:bg-secondary/60 transition-colors"
+            className="w-full h-11 justify-center gap-3 font-medium cursor-pointer border-border hover:bg-secondary/60 active:scale-[0.99] transition-all"
           >
             {loadingProvider === "google" ? (
               <Spinner className="size-4" />
@@ -88,7 +89,7 @@ export const AuthModal = memo(function AuthModal({
             variant="outline"
             onClick={() => handleOAuthSignIn("github")}
             disabled={loadingProvider !== null}
-            className="w-full h-11 justify-center gap-3 font-medium cursor-pointer border-border hover:bg-secondary/60 transition-colors"
+            className="w-full h-11 justify-center gap-3 font-medium cursor-pointer border-border hover:bg-secondary/60 active:scale-[0.99] transition-all"
           >
             {loadingProvider === "github" ? (
               <Spinner className="size-4" />
@@ -101,7 +102,11 @@ export const AuthModal = memo(function AuthModal({
           </Button>
         </div>
 
-        <div className="flex justify-end pt-2 border-t border-border">
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <ShieldCheck className="size-3.5 text-primary" />
+            <span>Encrypted OAuth 2.0</span>
+          </div>
           <DialogClose className="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer">
             Cancel
           </DialogClose>

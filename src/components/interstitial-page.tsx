@@ -50,6 +50,8 @@ export const InterstitialPage = memo(function InterstitialPage({
     // fallback to original string
   }
 
+  const progressPercent = Math.max(0, Math.min(100, ((5 - secondsRemaining) / 5) * 100));
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-4 py-8 sm:py-12 text-center animate-in fade-in duration-300">
       <div className="w-full max-w-2xl space-y-6">
@@ -78,7 +80,7 @@ export const InterstitialPage = memo(function InterstitialPage({
               <Globe className="size-3.5" />
               <span>Destination: <strong className="text-[var(--on-dark)] font-mono">{hostname}</strong></span>
             </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3.5 font-mono text-sm sm:text-base text-[var(--on-dark)] break-all select-all font-semibold">
+            <div className="rounded-xl bg-white/5 border border-white/10 p-3.5 font-mono text-sm sm:text-base text-[var(--on-dark)] break-all select-all font-semibold" title={link.originalUrl}>
               {truncateUrl(link.originalUrl, 60)}
             </div>
           </div>
@@ -104,6 +106,16 @@ export const InterstitialPage = memo(function InterstitialPage({
             </div>
           </div>
 
+          {/* Countdown Progress Bar */}
+          <div className="space-y-2 pt-1">
+            <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[var(--brand-mint)] transition-all duration-1000 ease-linear rounded-full"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
           {/* Navigation Action Buttons */}
           <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-xs text-[var(--on-dark-muted)]">
@@ -125,7 +137,7 @@ export const InterstitialPage = memo(function InterstitialPage({
               <Button
                 onClick={handleContinue}
                 disabled={autoRedirecting}
-                className="w-full sm:w-auto bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white font-semibold gap-2 rounded-lg cursor-pointer h-11 px-6 shadow-md"
+                className="w-full sm:w-auto bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] active:scale-[0.98] text-white font-semibold gap-2 rounded-lg cursor-pointer h-11 px-6 shadow-md transition-all"
               >
                 <span>Continue to Site</span>
                 <ArrowRight className="size-4" />
