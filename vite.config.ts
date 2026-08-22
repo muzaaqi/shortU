@@ -9,9 +9,7 @@ const config = defineConfig({
   plugins: [
     devtools(),
     tailwindcss(),
-    tanstackStart({
-      srcDirectory: "app",
-    }),
+    tanstackStart(),
     viteReact(),
   ],
 });

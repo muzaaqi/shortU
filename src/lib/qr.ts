@@ -1,7 +1,7 @@
 /**
  * QR code generation utility.
  * Always called server-side inside createLink server function.
- * Used by: app/server/functions/links.ts
+ * Used by: src/server/functions/links.ts
  */
 import QRCode from "qrcode";
 

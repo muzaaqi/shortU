@@ -1,7 +1,7 @@
 /**
  * TanStack Router instance configuration.
  * Creates and registers the router for SSR and client navigation.
- * Used by: app/client.tsx, app/ssr.tsx
+ * Used by: src/client.tsx, src/ssr.tsx
  */
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";

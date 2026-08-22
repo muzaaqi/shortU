@@ -302,7 +302,7 @@ Everything else in the app exists to deliver the user to this moment. Keep it qu
 
 ## CSS Variable Reference
 
-These variables are defined in `app/styles/globals.css` and consumed via Tailwind's `var()` syntax.
+These variables are defined in `src/styles.css` and consumed via Tailwind's `var()` syntax.
 
 ```css
 :root {
@@ -388,7 +388,7 @@ These variables are defined in `app/styles/globals.css` and consumed via Tailwin
 }
 ```
 
-Dark mode is applied via the `.dark` class on `<html>` (Tailwind's `darkMode: "class"` strategy). Toggle is managed by the theme provider in `app/routes/__root.tsx`.
+Dark mode is applied via the `.dark` class on `<html>` (Tailwind's `darkMode: "class"` strategy). Toggle is managed by the theme provider in `src/routes/__root.tsx`.
 
 **Dark mode notes:**
 - The result band (`{colors.surface-dark}`) is already dark in light mode. In dark mode it deepens to `{colors.surface-dark}` (`#0a0c12`) — slightly darker than the canvas so it still reads as a distinct zone.

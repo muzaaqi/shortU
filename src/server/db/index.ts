@@ -1,7 +1,7 @@
 /**
  * Drizzle database client.
  * Connects to Neon PostgreSQL via the serverless driver.
- * Used by: all server functions in app/server/functions/
+ * Used by: all server functions in src/server/functions/
  */
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";

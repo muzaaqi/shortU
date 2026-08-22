@@ -1,0 +1,123 @@
+/**
+ * Global stylesheet.
+ * Imports Tailwind CSS and defines all design token CSS variables from DESIGN.md.
+ * Used by: src/routes/__root.tsx (imported once at the root)
+ */
+@import "tailwindcss";
+
+:root {
+  /* Canvas & Surface */
+  --canvas: #fafaf7;
+  --surface-soft: #f4f3ee;
+  --surface-card: #eeecea;
+  --surface-strong: #e5e3de;
+  --surface-dark: #0f1117;
+  --surface-dark-elevated: #1a1d27;
+  --hairline: #dedcda;
+
+  /* Brand & Accent */
+  --primary: #0f1117;
+  --accent: #5c6bc0;
+  --accent-hover: #4a5ab8;
+  --accent-subtle: #5c6bc014;
+  --brand-mint: #4db6a8;
+  --brand-amber: #f0a500;
+  --brand-amber-subtle: #f0a50014;
+
+  /* Text */
+  --ink: #0f1117;
+  --body-strong: #1a1d27;
+  --body: #3a3d4a;
+  --muted: #6a6d7a;
+  --muted-soft: #9a9daa;
+  --on-primary: #ffffff;
+  --on-dark: #f4f3ee;
+  --on-dark-muted: #9a9daa;
+
+  /* Semantic */
+  --success: #4db6a8;
+  --success-subtle: #4db6a814;
+  --warning: #f0a500;
+  --warning-subtle: #f0a50014;
+  --error: #e53935;
+  --error-subtle: #e5393514;
+
+  /* Base UI / shadcn compatibility mappings */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--surface-card);
+  --card-foreground: var(--ink);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--ink);
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--surface-soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --destructive: var(--error);
+  --destructive-foreground: #ffffff;
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--accent);
+  --radius: 10px;
+}
+
+.dark {
+  /* Canvas & Surface */
+  --canvas: #0f1117;
+  --surface-soft: #131720;
+  --surface-card: #1a1d27;
+  --surface-strong: #222633;
+  --surface-dark: #0a0c12;
+  --surface-dark-elevated: #131720;
+  --hairline: #2a2d3a;
+
+  /* Brand & Accent */
+  --primary: #f4f3ee;
+  --accent: #7986cb;
+  --accent-hover: #8e99d4;
+  --accent-subtle: #7986cb1a;
+  --brand-mint: #4db6a8;
+  --brand-amber: #f0a500;
+  --brand-amber-subtle: #f0a5001a;
+
+  /* Text */
+  --ink: #f4f3ee;
+  --body-strong: #e8e6e0;
+  --body: #b8b9c4;
+  --muted: #7a7d8a;
+  --muted-soft: #4a4d5a;
+  --on-primary: #0f1117;
+  --on-dark: #f4f3ee;
+  --on-dark-muted: #7a7d8a;
+
+  /* Semantic */
+  --success: #4db6a8;
+  --success-subtle: #4db6a81a;
+  --warning: #f0a500;
+  --warning-subtle: #f0a5001a;
+  --error: #e53935;
+  --error-subtle: #e539351a;
+
+  /* Base UI / shadcn compatibility mappings */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--surface-card);
+  --card-foreground: var(--ink);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--ink);
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--surface-soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --destructive: var(--error);
+  --destructive-foreground: #ffffff;
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--accent);
+}
+
+body {
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}

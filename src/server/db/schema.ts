@@ -1,7 +1,7 @@
 /**
  * Drizzle database schema definitions.
  * Canonical schema for Better Auth and shortU application domain.
- * Used by: app/server/db/index.ts, drizzle.config.ts, migrations
+ * Used by: src/server/db/index.ts, drizzle.config.ts, migrations
  */
 import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
