@@ -34,6 +34,7 @@ export const sessions = pgTable("sessions", {
 
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
+  issuer: text("issuer").notNull(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   userId: text("user_id")
