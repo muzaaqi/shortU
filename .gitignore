@@ -10,3 +10,28 @@ drizzle/
 *.log
 .DS_Store
 src/routeTree.gen.ts
+
+# TanStack generated
+routeTree.gen.ts
+
+# Logs
+*.log
+
+/docs/*
+!/docs/plans/
+!/docs/plans/**
+
+
+.agents
+
+apps/web/.tanstack/tmp
+
+skills-lock.json
+
+.wrangler/*
+apps/web/.wrangler/
+
+scratch/*
+.superpowers/*
+
+debug
