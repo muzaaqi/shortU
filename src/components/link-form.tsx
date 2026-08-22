@@ -6,8 +6,8 @@
  */
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Check, Copy, Link as LinkIcon, Sparkles } from "lucide-react";
-import { memo, useState } from "react";
+import { Check, Copy, ExternalLink, Link as LinkIcon, RotateCcw, Sparkles } from "lucide-react";
+import { memo, useCallback, useState } from "react";
 import { z } from "zod";
 import { QrPreview } from "~/components/qr-preview";
 import { Button } from "~/components/ui/button";
@@ -101,11 +101,27 @@ export const LinkForm = memo(function LinkForm() {
     },
   });
 
-  const handleCopy = () => {
+  const handleCopy = useCallback(() => {
     if (!createdLink) return;
-    navigator.clipboard.writeText(createdLink.shortUrl);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(createdLink.shortUrl);
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = createdLink.shortUrl;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }, [createdLink]);
+
+  const handleReset = () => {
+    setCreatedLink(null);
+    form.reset();
   };
 
   return (
@@ -128,7 +144,7 @@ export const LinkForm = memo(function LinkForm() {
                   <FieldLabel htmlFor="url-input">
                     Enter your destination URL
                   </FieldLabel>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <InputGroup className="h-12 flex-1">
                       <InputGroupAddon align="inline-start">
                         <LinkIcon className="size-4" />
@@ -152,7 +168,7 @@ export const LinkForm = memo(function LinkForm() {
                           disabled={
                             !canSubmit || isSubmitting || mutation.isPending
                           }
-                          className="h-12 px-6 bg-primary text-primary-foreground font-semibold shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+                          className="h-12 px-6 bg-primary text-primary-foreground font-semibold shadow-xs hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap"
                         >
                           {isSubmitting || mutation.isPending ? (
                             <>
@@ -176,7 +192,7 @@ export const LinkForm = memo(function LinkForm() {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors cursor-pointer py-1"
             >
               <Sparkles className="size-3 text-primary" />
               {showAdvanced
@@ -185,14 +201,14 @@ export const LinkForm = memo(function LinkForm() {
             </button>
 
             {showAdvanced && (
-              <div className="mt-2 p-3 rounded-lg bg-secondary/50 border border-border space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="mt-2 p-3.5 rounded-lg bg-secondary/50 border border-border space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
                 <form.Field name="customSlug">
                   {(field) => {
                     const isInvalid =
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor="custom-slug" className="text-xs">
+                        <FieldLabel htmlFor="custom-slug" className="text-xs font-medium">
                           Custom Slug
                         </FieldLabel>
                         <InputGroup className="h-9 text-xs font-mono">
@@ -230,7 +246,7 @@ export const LinkForm = memo(function LinkForm() {
         </FieldGroup>
 
         {mutation.isError && (
-          <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive text-left font-medium">
+          <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3.5 text-xs text-destructive text-left font-medium">
             {mutation.error instanceof Error
               ? mutation.error.message
               : "An unexpected error occurred while shortening the URL."}
@@ -243,7 +259,7 @@ export const LinkForm = memo(function LinkForm() {
         <div className="rounded-xl bg-[var(--surface-dark)] text-[var(--on-dark)] p-5 sm:p-6 shadow-xl border border-white/10 space-y-4 text-left transition-all animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[var(--brand-mint)] animate-pulse" />
+              <span className="size-2 rounded-full bg-[var(--brand-mint)] animate-pulse" />
               <span className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-mint)]">
                 Link Ready
               </span>
@@ -255,11 +271,22 @@ export const LinkForm = memo(function LinkForm() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-2 flex-1 min-w-0 w-full">
-              <div className="rounded-lg bg-white/5 border border-white/10 p-3 font-mono text-base sm:text-lg text-[var(--on-dark)] font-semibold break-all">
-                {createdLink.shortUrl}
+              <div className="flex items-center justify-between gap-2 rounded-lg bg-white/5 border border-white/10 p-3">
+                <span className="font-mono text-base sm:text-lg text-[var(--on-dark)] font-semibold break-all select-all">
+                  {createdLink.shortUrl}
+                </span>
+                <a
+                  href={createdLink.shortUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-white/60 hover:text-white transition-colors shrink-0 p-1"
+                  title="Test short URL"
+                >
+                  <ExternalLink className="size-4" />
+                </a>
               </div>
               <p className="text-xs font-mono text-[var(--on-dark-muted)] truncate max-w-sm">
-                Original: {createdLink.originalUrl}
+                Destination: {createdLink.originalUrl}
               </p>
             </div>
 
@@ -275,10 +302,10 @@ export const LinkForm = memo(function LinkForm() {
             )}
           </div>
 
-          <div className="flex gap-2 pt-2 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
             <Button
               onClick={handleCopy}
-              className="w-full bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white font-medium gap-2 rounded-full cursor-pointer"
+              className="flex-1 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white font-medium gap-2 rounded-lg cursor-pointer h-10"
             >
               {copied ? (
                 <>
@@ -291,6 +318,14 @@ export const LinkForm = memo(function LinkForm() {
                   Copy Short Link
                 </>
               )}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleReset}
+              className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg gap-1.5 text-xs h-10 cursor-pointer"
+            >
+              <RotateCcw className="size-3.5" />
+              Shorten Another
             </Button>
           </div>
         </div>
