@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Link2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { Button } from "~/components/ui/button";
+import { UserNav } from "~/components/user-nav";
 import appCss from "~/styles.css?url";
 
 export const Route = createRootRoute({
@@ -53,16 +53,7 @@ function RootComponent() {
               <span>short<span className="text-primary font-bold">U</span></span>
             </Link>
             <nav className="flex items-center gap-3">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                  Dashboard
-                </Button>
-              </Link>
-              <Link to="/dashboard">
-                <Button size="sm" className="bg-primary text-primary-foreground font-medium">
-                  Get Started
-                </Button>
-              </Link>
+              <UserNav />
             </nav>
           </div>
         </header>

@@ -1,10 +1,16 @@
 /**
  * Better Auth API catch-all route.
- * Handles all /api/auth/* requests (OAuth callbacks, session, etc).
- * Do not modify this file.
+ * Handles all /api/auth/* requests (OAuth callbacks, sessions, etc).
+ * Used by: Better Auth client and OAuth providers
  */
 import { createFileRoute } from "@tanstack/react-router";
+import { auth } from "~/lib/auth-server";
 
 export const Route = createFileRoute("/api/auth/$")({
-  component: () => null,
+  server: {
+    handlers: {
+      GET: async ({ request }) => auth.handler(request),
+      POST: async ({ request }) => auth.handler(request),
+    },
+  },
 });
