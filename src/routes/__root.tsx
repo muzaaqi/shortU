@@ -76,11 +76,14 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col">
+      <body
+        className="min-h-screen bg-background text-foreground font-sans antialiased flex flex-col"
+        suppressHydrationWarning
+      >
         {children}
         <Scripts />
       </body>
