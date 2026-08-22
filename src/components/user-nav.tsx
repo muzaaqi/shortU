@@ -13,6 +13,7 @@ import { signOut, useSession } from "~/lib/auth";
 export const UserNav = memo(function UserNav() {
   const { data: session, isPending } = useSession();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -66,10 +67,13 @@ export const UserNav = memo(function UserNav() {
       </Link>
 
       <div className="flex items-center gap-2 pl-2 border-l border-border">
-        {user.image ? (
+        {user.image && !imageError ? (
           <img
             src={user.image}
-            alt={user.name || "User"}
+            alt={user.name || "User avatar"}
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
+            onError={() => setImageError(true)}
             className="size-7 rounded-full object-cover border border-border ring-1 ring-border/50"
           />
         ) : (
