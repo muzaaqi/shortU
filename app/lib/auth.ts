@@ -1,0 +1,12 @@
+/**
+ * Better Auth client configuration.
+ * Provides signIn, signOut, and session access on the client.
+ * Used by: app/routes/__root.tsx, any component needing auth actions
+ */
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: typeof window !== "undefined" ? window.location.origin : (process.env.BETTER_AUTH_URL ?? "http://localhost:3000"),
+});
+
+export const { signIn, signOut, useSession } = authClient;
