@@ -89,6 +89,10 @@ export const createLink = createServerFn({ method: "POST" })
     const session = await getSession();
     const userId = session?.user?.id || null;
 
+    if (data.customSlug && !userId) {
+      throw new Error("Custom slug aliases require signing in to shortU.");
+    }
+
     const id = nanoid();
     const now = new Date();
 
