@@ -1,29 +1,36 @@
 /**
- * Interstitial ad page route.
+ * Interstitial ad route handler (/go/$slug).
+ * Renders destination preview, sponsored ad placement, and automated countdown.
  * Surface Mode: Experience
  * Used by: TanStack Router for route "/go/$slug"
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { InterstitialPage } from "~/components/interstitial-page";
+import { trackClick } from "~/server/functions/analytics";
 import { getLinkBySlug } from "~/server/functions/links";
 
 export const Route = createFileRoute("/go/$slug")({
   loader: async ({ params }) => {
-    const link = await getLinkBySlug({ data: { slug: params.slug } });
+    const slug = params.slug;
+    const link = await getLinkBySlug({ data: { slug } });
+
+    if (!link) {
+      throw redirect({
+        to: "/",
+      });
+    }
+
+    // Fire-and-forget click telemetry
+    trackClick({ data: { linkId: link.id } }).catch(() => {
+      // ignore telemetry errors
+    });
+
     return { link };
   },
-  component: InterstitialPage,
+  component: GoSlugRoute,
 });
 
-function InterstitialPage() {
+function GoSlugRoute() {
   const { link } = Route.useLoaderData();
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-16 text-center space-y-6">
-      <h1 className="text-2xl font-bold">Redirecting...</h1>
-      {link ? (
-        <p className="text-muted-foreground font-mono text-sm">{link.originalUrl}</p>
-      ) : (
-        <p className="text-destructive text-sm">Link not found.</p>
-      )}
-    </div>
-  );
+  return <InterstitialPage link={link} />;
 }

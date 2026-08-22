@@ -5,6 +5,7 @@
  * Used by: TanStack Router for route "/$slug"
  */
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { trackClick } from "~/server/functions/analytics";
 import { getLinkBySlug } from "~/server/functions/links";
 
 export const Route = createFileRoute("/$slug")({
@@ -24,6 +25,11 @@ export const Route = createFileRoute("/$slug")({
         params: { slug },
       });
     }
+
+    // Fire-and-forget click telemetry for direct 301 redirection
+    trackClick({ data: { linkId: link.id } }).catch(() => {
+      // ignore telemetry errors
+    });
 
     // Direct HTTP 301 redirect
     throw redirect({
