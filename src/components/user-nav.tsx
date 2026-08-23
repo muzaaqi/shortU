@@ -3,8 +3,7 @@
  * Displays OAuth sign-in trigger or authenticated user profile menu with Sign Out.
  * Used by: src/routes/__root.tsx
  */
-import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { memo, useState } from "react";
 import { AuthModal } from "~/components/auth-modal";
 import { Button } from "~/components/ui/button";
@@ -58,15 +57,7 @@ export const UserNav = memo(function UserNav() {
 
   return (
     <div className="flex items-center gap-2">
-      <Link
-        to="/dashboard"
-        className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-secondary/60 [&.active]:text-foreground [&.active]:font-semibold [&.active]:bg-secondary/80"
-      >
-        <LayoutDashboard className="size-3.5" />
-        <span className="hidden sm:inline">Dashboard</span>
-      </Link>
-
-      <div className="flex items-center gap-2 pl-2 border-l border-border">
+      <div className="flex items-center gap-2">
         {user.image && !imageError ? (
           <img
             src={user.image}

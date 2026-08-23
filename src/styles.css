@@ -64,6 +64,11 @@
   --color-body-strong: var(--body-strong);
   --color-body: var(--body);
 
+  /* Semantic subtle tints (DESIGN.md) */
+  --color-success-subtle: var(--semantic-success-subtle);
+  --color-warning-subtle: var(--semantic-warning-subtle);
+  --color-error-subtle: var(--semantic-error-subtle);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

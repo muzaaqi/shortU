@@ -51,7 +51,7 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
   const shortUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/${link.slug}`
-      : `https://shortu.dev/${link.slug}`;
+      : `/${link.slug}`;
 
   const handleCopy = useCallback(() => {
     if (navigator.clipboard?.writeText) {
@@ -140,7 +140,7 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
           {link.adEnabled && (
             <Badge
               variant="outline"
-              className="text-[10px] text-[var(--brand-amber)] border-[var(--brand-amber)]/40 font-medium"
+              className="text-[10px] text-brand-amber border-brand-amber/40 font-medium"
             >
               Ad Page Active
             </Badge>

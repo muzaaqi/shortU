@@ -124,7 +124,7 @@ function DashboardPage() {
           className="gap-2 bg-primary text-primary-foreground font-semibold shadow-xs cursor-pointer"
         >
           {showCreate ? (
-            "Close Form"
+            "Cancel"
           ) : (
             <>
               <Plus className="size-4" />
@@ -137,35 +137,39 @@ function DashboardPage() {
       {/* Summary Telemetry Metrics */}
       {links.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <Link2 className="size-3.5 text-primary" />
-              <span>Total Active Links</span>
+          {[
+            {
+              label: "Total Active Links",
+              value: String(links.length),
+              icon: <Link2 className="size-3.5" />,
+              accent: "text-primary",
+            },
+            {
+              label: "Total Clicks Tracked",
+              value: totalClicks.toLocaleString(),
+              icon: <BarChart3 className="size-3.5" />,
+              accent: "text-primary",
+            },
+            {
+              label: "Monetized Ad Links",
+              value: String(totalAdLinks),
+              icon: <Radio className="size-3.5" />,
+              accent: "text-brand-amber",
+            },
+          ].map((metric) => (
+            <div
+              key={metric.label}
+              className="rounded-xl border border-border bg-card p-4 space-y-1 shadow-2xs"
+            >
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <span className={metric.accent}>{metric.icon}</span>
+                <span>{metric.label}</span>
+              </div>
+              <p className="text-2xl font-bold tracking-tight text-foreground font-mono">
+                {metric.value}
+              </p>
             </div>
-            <p className="text-2xl font-bold tracking-tight text-foreground font-mono">
-              {links.length}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <BarChart3 className="size-3.5 text-primary" />
-              <span>Total Clicks Tracked</span>
-            </div>
-            <p className="text-2xl font-bold tracking-tight text-foreground font-mono">
-              {totalClicks}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <Radio className="size-3.5 text-[var(--brand-amber)]" />
-              <span>Monetized Ad Links</span>
-            </div>
-            <p className="text-2xl font-bold tracking-tight text-foreground font-mono">
-              {totalAdLinks}
-            </p>
-          </div>
+          ))}
         </div>
       )}
 
@@ -185,7 +189,9 @@ function DashboardPage() {
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              placeholder="Search links by slug or destination URL..."
+              type="search"
+              aria-label="Search links by slug or destination URL"
+              placeholder="Search links..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 pr-8 bg-card"

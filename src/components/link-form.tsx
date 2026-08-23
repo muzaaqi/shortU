@@ -5,7 +5,7 @@
  * Used by: src/routes/index.tsx, src/routes/dashboard.tsx
  */
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Check,
   Clipboard,
@@ -36,7 +36,10 @@ import {
 import { Spinner } from "~/components/ui/spinner";
 import { useSession } from "~/lib/auth";
 import { RESERVED_SLUGS, SLUG_REGEX } from "~/lib/slugify";
-import { createLink } from "~/server/functions/links";
+import { createLink, getAppOrigin } from "~/server/functions/links";
+
+/** Query key for the app's public origin (rarely changes — cached indefinitely) */
+const APP_ORIGIN_KEY = ["app", "origin"] as const;
 
 const urlSchema = z
   .string()
@@ -68,6 +71,23 @@ export const LinkForm = memo(function LinkForm() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // App origin from the server (env/request-derived) — powers the slug prefix display
+  const { data: appOrigin } = useQuery({
+    queryKey: APP_ORIGIN_KEY,
+    queryFn: getAppOrigin,
+    staleTime: Infinity,
+  });
+
+  const slugPrefix = (() => {
+    const source = appOrigin || (typeof window !== "undefined" ? window.location.origin : null);
+    if (!source) return "";
+    try {
+      return `${new URL(source).host}/`;
+    } catch {
+      return "";
+    }
+  })();
   const [createdLink, setCreatedLink] = useState<{
     slug: string;
     originalUrl: string;
@@ -264,12 +284,12 @@ export const LinkForm = memo(function LinkForm() {
                           Custom Slug
                         </FieldLabel>
                         <InputGroup className="h-9 text-xs font-mono bg-card">
-                          <InputGroupAddon
-                            align="inline-start"
-                            className="text-xs text-muted-foreground font-mono"
-                          >
-                            shortu.dev/
-                          </InputGroupAddon>
+                        <InputGroupAddon
+                          align="inline-start"
+                          className="text-xs text-muted-foreground font-mono"
+                        >
+                          {slugPrefix}
+                        </InputGroupAddon>
                           <InputGroupInput
                             id="custom-slug"
                             placeholder="my-cool-link"
@@ -308,36 +328,43 @@ export const LinkForm = memo(function LinkForm() {
 
       {/* Signature Terminal Result Moment */}
       {createdLink && (
-        <div className="rounded-xl bg-[var(--surface-dark)] text-[var(--on-dark)] p-5 sm:p-6 shadow-xl border border-white/10 space-y-4 text-left transition-all animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="rounded-xl bg-surface-dark text-on-dark p-5 sm:p-6 shadow-xl space-y-4 text-left transition-all animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between border-b border-hairline/40 pb-3">
             <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-[var(--brand-mint)] animate-pulse" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-mint)]">
+              <span className="size-2 rounded-full bg-brand-mint animate-pulse" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-brand-mint">
                 Link Ready
               </span>
             </div>
-            <span className="text-xs font-mono text-[var(--on-dark-muted)]">
+            <span className="text-xs font-mono text-on-dark-muted">
               nanoid(7)
             </span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-2 flex-1 min-w-0 w-full">
-              <div className="flex items-center justify-between gap-2 rounded-lg bg-white/5 border border-white/10 p-3">
-                <span className="font-mono text-base sm:text-lg text-[var(--on-dark)] font-semibold break-all select-all">
-                  {createdLink.shortUrl}
-                </span>
+              {/* Slug output — terminal-prompt readout per DESIGN.md result-band spec */}
+              <div className="flex items-center justify-between gap-2 rounded-sm bg-accent px-3 py-2">
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <span className="font-mono text-lg text-brand-accent select-none" aria-hidden="true">
+                    &gt;
+                  </span>
+                  <span className="font-mono text-lg text-on-dark font-medium break-all select-all">
+                    {createdLink.shortUrl}
+                  </span>
+                </div>
                 <a
                   href={createdLink.shortUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-white/60 hover:text-white transition-colors shrink-0 p-1"
+                  className="text-on-dark-muted hover:text-on-dark transition-colors shrink-0 p-1"
                   title="Test short URL"
                 >
                   <ExternalLink className="size-4" />
                 </a>
               </div>
-              <p className="text-xs font-mono text-[var(--on-dark-muted)] truncate max-w-sm">
+              {/* Original destination readout */}
+              <p className="text-xs font-mono text-on-dark-muted truncate max-w-sm" title={createdLink.originalUrl}>
                 Destination: {createdLink.originalUrl}
               </p>
             </div>
@@ -354,15 +381,15 @@ export const LinkForm = memo(function LinkForm() {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-hairline/40">
             <Button
               onClick={handleCopy}
-              className="flex-1 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white font-medium gap-2 rounded-lg cursor-pointer h-10 transition-all active:scale-[0.98]"
+              className="flex-1 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium gap-2 rounded-full cursor-pointer h-10 transition-all active:scale-[0.98]"
             >
               {copied ? (
                 <>
-                  <Check className="size-4 text-[var(--brand-mint)]" />
-                  Copied to Clipboard!
+                  <Check className="size-4 text-brand-mint" />
+                  Copied!
                 </>
               ) : (
                 <>
@@ -374,7 +401,7 @@ export const LinkForm = memo(function LinkForm() {
             <Button
               variant="ghost"
               onClick={handleReset}
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg gap-1.5 text-xs h-10 cursor-pointer"
+              className="text-on-dark-muted hover:text-on-dark hover:bg-white/10 rounded-full gap-1.5 text-xs h-10 cursor-pointer"
             >
               <RotateCcw className="size-3.5" />
               Shorten Another

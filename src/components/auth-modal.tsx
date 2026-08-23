@@ -35,8 +35,8 @@ export const AuthModal = memo(function AuthModal({
         provider,
         callbackURL: `${window.location.origin}/dashboard`,
       });
-    } catch (error) {
-      console.error("Sign in failed:", error);
+    } catch {
+      // OAuth redirect failed — reset so the user can retry another provider
       setLoadingProvider(null);
     }
   };
@@ -105,7 +105,7 @@ export const AuthModal = memo(function AuthModal({
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
-            <span>Encrypted OAuth 2.0</span>
+            <span>Secured OAuth sign-in</span>
           </div>
           <DialogClose className="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer">
             Cancel

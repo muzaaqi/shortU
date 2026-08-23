@@ -173,7 +173,7 @@ Base unit: 4px.
 **`result-band`** — The primary brand moment shown after a link is created.
 - Background: `bg-[var(--surface-dark)]` (`#0f1117` in light, `#0a0c12` in dark)
 - Text: `text-[var(--on-dark)]` (`#f4f3ee`)
-- Slug output: `font-mono text-lg text-[var(--on-dark)] bg-[var(--brand-accent-subtle)] border-l-4 border-[var(--brand-accent)] px-3 py-2 rounded-sm`
+- Slug output: `font-mono text-lg text-on-dark bg-accent px-3 py-2 rounded-sm` with a mono `>` prompt marker in `text-brand-accent` (terminal readout — no side-tab accent borders)
 - Original URL: `font-mono text-sm text-[var(--on-dark-muted)] truncate`
 - "Copy" button: `bg-[var(--brand-accent)] text-white hover:bg-[var(--brand-accent-hover)] rounded-full`
 - QR preview: 120×120px, white background (always for scan contrast), `rounded-md`
@@ -196,10 +196,12 @@ Base unit: 4px.
 
 ### Interstitial Ad Page
 
-**`interstitial-page`** — Full-viewport dark surface `bg-[var(--surface-dark)]`.
-- Destination URL: `font-mono text-sm text-[var(--on-dark-muted)]`
-- "Continue" button: `bg-primary-foreground text-primary` (inverted CTA)
-- Ad slot: centered placeholder zone `bg-[var(--surface-dark-elevated)] border-dashed border-border`
+**`interstitial-page`** — Light page canvas (`--canvas`) with a single elevated dark destination card `bg-[var(--surface-dark)]`, rounded-xl (20px), shadow. The dark card is the focal point; the surrounding canvas keeps the app shell (nav/footer) coherent.
+- Destination URL: `font-mono text-sm text-on-dark` inside `bg-[var(--surface-dark-elevated)]` readout
+- Countdown progress: mint track fill via `transform: scaleX()` (never animates width)
+- Pause/resume control: ghost icon button, `text-on-dark-muted`, rounded-full
+- "Continue" button: `bg-brand-accent text-white hover:bg-brand-accent-hover`
+- Ad slot: centered placeholder zone `bg-[var(--surface-dark-elevated)] border-dashed border-white/15`
 
 ---
 

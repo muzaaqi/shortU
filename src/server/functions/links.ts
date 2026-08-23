@@ -21,6 +21,37 @@ export interface CreateLinkInput {
 }
 
 /**
+ * Resolves the public origin used to build short URLs.
+ * Prefers the incoming request host (so URLs match the visiting domain),
+ * falling back to BETTER_AUTH_URL from env, then localhost.
+ * Server-only — env is never accessed from client modules.
+ * Used by: createLink handler, getAppOrigin server function
+ */
+async function resolveOrigin(): Promise<string> {
+  const fallback = process.env.BETTER_AUTH_URL || "http://localhost:3000";
+  try {
+    const request = getRequest();
+    const host = request?.headers.get("host") || request?.headers.get("x-forwarded-host");
+    const proto = request?.headers.get("x-forwarded-proto") || "http";
+    if (host) {
+      return `${proto}://${host}`;
+    }
+  } catch {
+    // No request context (e.g. called outside a request scope) — use env fallback
+  }
+  return fallback;
+}
+
+/**
+ * Returns the app's public origin (e.g. "https://shortu.dev") for client-side
+ * display, such as the custom-slug input prefix.
+ * Used by: src/components/link-form.tsx
+ */
+export const getAppOrigin = createServerFn({ method: "GET" }).handler(async () => {
+  return resolveOrigin();
+});
+
+/**
  * Creates a new short link.
  * Validates original URL and optional custom slug, checks collision,
  * generates QR code, and persists record to Neon PostgreSQL.
@@ -70,17 +101,7 @@ export const createLink = createServerFn({ method: "POST" })
     }
 
     // Determine host origin for short URL
-    let origin = process.env.BETTER_AUTH_URL || "http://localhost:3000";
-    try {
-      const request = getRequest();
-      const host = request?.headers.get("host") || request?.headers.get("x-forwarded-host");
-      const proto = request?.headers.get("x-forwarded-proto") || "http";
-      if (host) {
-        origin = `${proto}://${host}`;
-      }
-    } catch {
-      // Fallback to BETTER_AUTH_URL
-    }
+    const origin = await resolveOrigin();
 
     const shortUrl = `${origin}/${slug}`;
     const qrCode = await generateQR(shortUrl);
