@@ -1,7 +1,7 @@
 /**
  * Better Auth server configuration.
  * Registers OAuth providers (Google, GitHub) and the Drizzle adapter.
- * Used by: src/routes/api/auth/$.ts, src/server/functions/auth.ts
+ * Used by: src/routes/api/auth/$.ts
  */
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";

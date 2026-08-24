@@ -12,7 +12,7 @@ import { generateQR } from "~/lib/qr";
 import { generateSlug, validateSlug } from "~/lib/slugify";
 import { db } from "~/server/db";
 import { links } from "~/server/db/schema";
-import { getSession } from "./auth";
+import { getCurrentSession } from "~/server/auth/session";
 
 export interface CreateLinkInput {
   originalUrl: string;
@@ -107,7 +107,7 @@ export const createLink = createServerFn({ method: "POST" })
     const qrCode = await generateQR(shortUrl);
 
     // Check optional authenticated user session
-    const session = await getSession();
+    const session = await getCurrentSession();
     const userId = session?.user?.id || null;
 
     if (data.customSlug && !userId) {
@@ -161,7 +161,7 @@ export const getLinkBySlug = createServerFn({ method: "GET" })
  * Used by: src/routes/dashboard.tsx
  */
 export const getLinks = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await getSession();
+  const session = await getCurrentSession();
   if (!session?.user?.id) {
     return [];
   }
@@ -185,7 +185,7 @@ export const deleteLink = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data }) => {
-    const session = await getSession();
+    const session = await getCurrentSession();
     if (!session?.user?.id) {
       throw new Error("Unauthorized. Please sign in to delete links.");
     }
@@ -212,7 +212,7 @@ export const toggleAdMode = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data }) => {
-    const session = await getSession();
+    const session = await getCurrentSession();
     if (!session?.user?.id) {
       throw new Error("Unauthorized. Please sign in to update link settings.");
     }
