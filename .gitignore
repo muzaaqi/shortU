@@ -35,3 +35,5 @@ scratch/*
 .superpowers/*
 
 debug
+
+opencode.json
