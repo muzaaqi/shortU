@@ -6,20 +6,11 @@
  */
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  Check,
-  Clipboard,
-  Copy,
-  ExternalLink,
-  Link as LinkIcon,
-  Lock,
-  RotateCcw,
-  Sparkles,
-} from "lucide-react";
-import { memo, useCallback, useState } from "react";
+import { Clipboard, Link as LinkIcon, Lock, Sparkles } from "lucide-react";
+import { memo, useState } from "react";
 import { z } from "zod";
 import { AuthModal } from "~/components/auth-modal";
-import { QrPreview } from "~/components/qr-preview";
+import { LinkResult } from "~/components/link-result";
 import { Button } from "~/components/ui/button";
 import {
   Field,
@@ -70,7 +61,6 @@ export const LinkForm = memo(function LinkForm() {
   const { data: session } = useSession();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // App origin from the server (env/request-derived) — powers the slug prefix display
   const { data: appOrigin } = useQuery({
@@ -146,24 +136,6 @@ export const LinkForm = memo(function LinkForm() {
       // Clipboard read permission might be restricted
     }
   };
-
-  const handleCopy = useCallback(() => {
-    if (!createdLink) return;
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(createdLink.shortUrl);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = createdLink.shortUrl;
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [createdLink]);
 
   const handleReset = () => {
     setCreatedLink(null);
@@ -328,86 +300,15 @@ export const LinkForm = memo(function LinkForm() {
 
       {/* Signature Terminal Result Moment */}
       {createdLink && (
-        <div className="rounded-xl bg-surface-dark text-on-dark p-5 sm:p-6 shadow-xl space-y-4 text-left transition-all animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center justify-between border-b border-hairline/40 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-brand-mint animate-pulse" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-brand-mint">
-                Link Ready
-              </span>
-            </div>
-            <span className="text-xs font-mono text-on-dark-muted">
-              nanoid(7)
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-2 flex-1 min-w-0 w-full">
-              {/* Slug output — terminal-prompt readout per DESIGN.md result-band spec */}
-              <div className="flex items-center justify-between gap-2 rounded-sm bg-accent px-3 py-2">
-                <div className="flex items-baseline gap-2 min-w-0">
-                  <span className="font-mono text-lg text-brand-accent select-none" aria-hidden="true">
-                    &gt;
-                  </span>
-                  <span className="font-mono text-lg text-on-dark font-medium break-all select-all">
-                    {createdLink.shortUrl}
-                  </span>
-                </div>
-                <a
-                  href={createdLink.shortUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-on-dark-muted hover:text-on-dark transition-colors shrink-0 p-1"
-                  title="Test short URL"
-                >
-                  <ExternalLink className="size-4" />
-                </a>
-              </div>
-              {/* Original destination readout */}
-              <p className="text-xs font-mono text-on-dark-muted truncate max-w-sm" title={createdLink.originalUrl}>
-                Destination: {createdLink.originalUrl}
-              </p>
-            </div>
-
-            {createdLink.qrCode && (
-              <div className="shrink-0">
-                <QrPreview
-                  qrCode={createdLink.qrCode}
-                  slug={createdLink.slug}
-                  size="sm"
-                  showDownload={true}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-hairline/40">
-            <Button
-              onClick={handleCopy}
-              className="flex-1 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium gap-2 rounded-full cursor-pointer h-10 transition-all active:scale-[0.98]"
-            >
-              {copied ? (
-                <>
-                  <Check className="size-4 text-brand-mint" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="size-4" />
-                  Copy Short Link
-                </>
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={handleReset}
-              className="text-on-dark-muted hover:text-on-dark hover:bg-white/10 rounded-full gap-1.5 text-xs h-10 cursor-pointer"
-            >
-              <RotateCcw className="size-3.5" />
-              Shorten Another
-            </Button>
-          </div>
-        </div>
+        <LinkResult
+          result={{
+            slug: createdLink.slug,
+            originalUrl: createdLink.originalUrl,
+            shortUrl: createdLink.shortUrl,
+            qrCode: createdLink.qrCode,
+          }}
+          onReset={handleReset}
+        />
       )}
 
       {/* Auth Modal Trigger for Locked Features */}
