@@ -17,27 +17,50 @@ export const OAuthButtons = memo(function OAuthButtons({
   className?: string;
 }) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /**
    * Starts the OAuth redirect flow for the chosen provider.
-   * Resets the loading state on failure so another provider can be retried.
+   * Better Auth resolves with { data, error } instead of throwing, so both
+   * channels are checked; any failure surfaces as inline UI text rather
+   * than a silent no-op.
    * Used by: both provider buttons in this component
    */
   const handleOAuthSignIn = async (provider: "google" | "github") => {
+    setErrorMessage(null);
+    setLoadingProvider(provider);
     try {
-      setLoadingProvider(provider);
-      await signIn.social({
+      const result = await signIn.social({
         provider,
         callbackURL: `${window.location.origin}/dashboard`,
       });
+      if (result?.error) {
+        // Provider misconfigured (e.g. missing client id/secret) or network issue
+        setErrorMessage(
+          result.error.message ??
+            `${provider} sign-in is unavailable right now. Please try again later.`,
+        );
+      }
     } catch {
-      // OAuth redirect failed — reset so the user can retry another provider
+      setErrorMessage(
+        `Could not start ${provider} sign-in. Check your connection and try again.`,
+      );
+    } finally {
       setLoadingProvider(null);
     }
   };
 
   return (
     <div className={cn("space-y-3", className)}>
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-lg bg-error-subtle p-3 text-center text-xs font-medium text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
+
       {/* Google OAuth Button */}
       <Button
         variant="outline"
