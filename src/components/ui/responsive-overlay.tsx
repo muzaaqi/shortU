@@ -19,7 +19,6 @@ import {
 } from "~/components/ui/dialog";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
@@ -72,11 +71,7 @@ export function ResponsiveOverlay({
       // must survive the className merge
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className={contentClassName}>
-          <DrawerClose className={closeClasses} title="Close">
-            <X className="size-4" />
-            <span className="sr-only">Close</span>
-          </DrawerClose>
-          <DrawerHeader className="pr-10 text-left">
+          <DrawerHeader>
             <DrawerTitle>{title}</DrawerTitle>
             {description && <DrawerDescription>{description}</DrawerDescription>}
           </DrawerHeader>

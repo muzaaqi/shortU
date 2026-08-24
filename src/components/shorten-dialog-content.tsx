@@ -27,6 +27,9 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "~/components/ui/input-group";
+import {
+  Label
+} from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
 import { Switch } from "~/components/ui/switch";
 import { useSession } from "~/lib/auth";
@@ -169,7 +172,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                       onClick={handlePaste}
                       title="Paste from clipboard"
                       aria-label="Paste from clipboard"
-                      className="cursor-pointer pr-3 text-muted-foreground transition-colors hover:text-foreground"
+                      className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <Clipboard className="size-4" />
                     </button>
@@ -186,24 +189,25 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
           {!isCustomSlug ? (
             /* Read-only generated slug — deliberately NOT a form field */
             <Field>
-              <div className="mb-1 flex items-center gap-2">
-                <label
+              <div className="mb-1 flex items-center justify-between">
+                <FieldLabel
+                  htmlFor="random-slug-input"
+                >
+                  Random Slug
+                </FieldLabel>
+                <div className="flex gap-2 items-center">
+                <Label
                   htmlFor="custom-slug-switch"
                   className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
                 >
                   Custom slug
-                </label>
+                </Label>
                 <Switch
                   id="custom-slug-switch"
                   checked={isCustomSlug}
                   onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
                 />
-                <FieldLabel
-                  htmlFor="random-slug-input"
-                  className="ml-1 text-xs font-semibold text-foreground"
-                >
-                  Random Slug
-                </FieldLabel>
+                </div>
               </div>
               <InputGroup className="h-11 bg-card">
                 <InputGroupInput
@@ -213,13 +217,16 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   aria-label="Generated slug"
                   aria-readonly="true"
                   tabIndex={-1}
-                  className="select-all font-mono"
+                  className="select-all pl-0"
                 />
                 {/* Domain display + regenerate action, inner-right */}
-                <InputGroupAddon align="inline-end" className="pr-1">
-                  <span className="font-mono text-xs text-muted-foreground select-none">
-                    {slugPrefix}
-                  </span>
+                <InputGroupAddon
+                        align="inline-start"
+                        className="text-muted-foreground"
+                      >
+                        {slugPrefix}
+                      </InputGroupAddon>
+                <InputGroupAddon align="inline-end">
                   <Button
                     type="button"
                     variant="ghost"
@@ -233,9 +240,6 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   </Button>
                 </InputGroupAddon>
               </InputGroup>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Generated for you — click refresh for a different one.
-              </p>
             </Field>
           ) : (
             /* Editable custom slug with live domain prefix (inner-left) */
@@ -244,29 +248,30 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <div className="mb-1 flex items-center gap-2">
-                      <label
-                        htmlFor="custom-slug-switch"
-                        className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
-                      >
-                        Custom slug
-                      </label>
-                      <Switch
-                        id="custom-slug-switch"
-                        checked={isCustomSlug}
-                        onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
-                      />
-                      <FieldLabel
-                        htmlFor={field.name}
-                        className="ml-1 text-xs font-semibold text-foreground"
-                      >
-                        Custom Slug
-                      </FieldLabel>
-                    </div>
+              <div className="mb-1 flex items-center justify-between">
+                <FieldLabel
+                  htmlFor="random-slug-input"
+                >
+                  Custom Slug
+                </FieldLabel>
+                <div className="flex gap-2 items-center">
+                <Label
+                  htmlFor="custom-slug-switch"
+                  className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
+                >
+                  Random slug
+                </Label>
+                <Switch
+                  id="custom-slug-switch"
+                  checked={isCustomSlug}
+                  onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
+                />
+                </div>
+              </div>
                     <InputGroup className="h-11 bg-card">
                       <InputGroupAddon
                         align="inline-start"
-                        className="pl-3 font-mono text-xs text-muted-foreground"
+                        className="pl-3 text-xs text-muted-foreground"
                       >
                         {slugPrefix}
                       </InputGroupAddon>
@@ -278,7 +283,6 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value.toLowerCase())}
                         aria-invalid={isInvalid || undefined}
-                        className="font-mono"
                       />
                     </InputGroup>
                     {customRequiresAuth && (
@@ -304,12 +308,11 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
 
         {/* QR opt-in — label left, switch right */}
         <div className="flex items-center justify-between pt-1">
-          <label
+          <Label
             htmlFor="include-qr-switch"
-            className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
           >
-            Generate QR code
-          </label>
+            Generate QR
+          </Label>
           <Switch
             id="include-qr-switch"
             checked={includeQr}
@@ -338,7 +341,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
       )}
 
       {/* Action row — identical in both shells */}
-      <div className="mt-4 flex justify-end gap-2 border-t border-border pt-3">
+      <div className="mt-5 grid grid-cols-2 gap-2">
         {result ? (
           <Button variant="outline" onClick={onClose} className="cursor-pointer">
             Close

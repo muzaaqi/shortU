@@ -24,7 +24,7 @@ function useDrawer() {
 
 function Drawer({
   modal = true,
-  showSwipeHandle = false,
+  showSwipeHandle = true,
   snapPoints,
   swipeDirection = "down",
   ...props
@@ -167,7 +167,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="drawer-header"
       className={cn(
-        "flex shrink-0 flex-col gap-0.5 p-4 pb-0 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-0.5 md:text-left",
+        "flex shrink-0 flex-col gap-0.5 p-4 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-0.5 md:text-left",
         className
       )}
       {...props}
@@ -190,7 +190,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
     <DrawerPrimitive.Title
       data-slot="drawer-title"
       className={cn(
-        "text-base font-medium text-foreground",
+        "text-base font-semibold text-foreground",
         className
       )}
       {...props}
