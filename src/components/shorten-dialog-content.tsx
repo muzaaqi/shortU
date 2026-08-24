@@ -11,7 +11,7 @@
  */
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Clipboard, Lock, QrCode, RefreshCw } from "lucide-react";
+import { Clipboard, Lock, RefreshCw } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { AuthModal } from "~/components/auth-modal";
 import { LinkResult, type LinkResultData } from "~/components/link-result";
@@ -181,28 +181,30 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
           }}
         </form.Field>
 
-        {/* Custom slug mode — off (default) renders the random field, on renders the custom field */}
-        <div className="space-y-2 text-left">
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="custom-slug-switch"
-              className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
-            >
-              Custom slug
-            </label>
-            <Switch
-              id="custom-slug-switch"
-              checked={isCustomSlug}
-              onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
-            />
-          </div>
-
+        {/* Slug fields — the Custom slug switch sits left of each input label */}
+        <div className="text-left">
           {!isCustomSlug ? (
             /* Read-only generated slug — deliberately NOT a form field */
             <Field>
-              <FieldLabel htmlFor="random-slug-input" className="text-xs font-medium text-foreground">
-                Random Slug
-              </FieldLabel>
+              <div className="mb-1 flex items-center gap-2">
+                <label
+                  htmlFor="custom-slug-switch"
+                  className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
+                >
+                  Custom slug
+                </label>
+                <Switch
+                  id="custom-slug-switch"
+                  checked={isCustomSlug}
+                  onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
+                />
+                <FieldLabel
+                  htmlFor="random-slug-input"
+                  className="ml-1 text-xs font-semibold text-foreground"
+                >
+                  Random Slug
+                </FieldLabel>
+              </div>
               <InputGroup className="h-11 bg-card">
                 <InputGroupInput
                   id="random-slug-input"
@@ -213,11 +215,11 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   tabIndex={-1}
                   className="select-all font-mono"
                 />
-                {/* Domain display, inner-right (mirrors custom slug's inner-left) */}
-                <InputGroupAddon align="inline-end" className="font-mono text-xs text-muted-foreground">
-                  {slugPrefix}
-                </InputGroupAddon>
-                <InputGroupAddon align="inline-end">
+                {/* Domain display + regenerate action, inner-right */}
+                <InputGroupAddon align="inline-end" className="pr-1">
+                  <span className="font-mono text-xs text-muted-foreground select-none">
+                    {slugPrefix}
+                  </span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -225,13 +227,13 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                     onClick={handleRegenerate}
                     title="Generate a new random slug"
                     aria-label="Generate a new random slug"
-                    className="mr-1 cursor-pointer text-muted-foreground hover:text-foreground"
+                    className="-mr-1 cursor-pointer text-muted-foreground hover:text-foreground"
                   >
                     <RefreshCw className="size-3.5" />
                   </Button>
                 </InputGroupAddon>
               </InputGroup>
-              <p className="text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Generated for you — click refresh for a different one.
               </p>
             </Field>
@@ -242,9 +244,25 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                 const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name} className="text-xs font-medium text-foreground">
-                      Custom Slug
-                    </FieldLabel>
+                    <div className="mb-1 flex items-center gap-2">
+                      <label
+                        htmlFor="custom-slug-switch"
+                        className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
+                      >
+                        Custom slug
+                      </label>
+                      <Switch
+                        id="custom-slug-switch"
+                        checked={isCustomSlug}
+                        onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
+                      />
+                      <FieldLabel
+                        htmlFor={field.name}
+                        className="ml-1 text-xs font-semibold text-foreground"
+                      >
+                        Custom Slug
+                      </FieldLabel>
+                    </div>
                     <InputGroup className="h-11 bg-card">
                       <InputGroupAddon
                         align="inline-start"
@@ -284,27 +302,19 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
           )}
         </div>
 
-        {/* Decorative QR placeholder — design only; opted-in real QR shows in the result view */}
-        <div className="flex flex-col items-center gap-2 pt-1">
-          <div
-            aria-hidden="true"
-            className="flex size-28 items-center justify-center rounded-xl border border-dashed border-border bg-card text-muted-foreground/40"
+        {/* QR opt-in — label left, switch right */}
+        <div className="flex items-center justify-between pt-1">
+          <label
+            htmlFor="include-qr-switch"
+            className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
           >
-            <QrCode className="size-14" />
-          </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="include-qr-switch"
-              className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
-            >
-              Generate QR code
-            </label>
-            <Switch
-              id="include-qr-switch"
-              checked={includeQr}
-              onCheckedChange={(checked) => setIncludeQr(Boolean(checked))}
-            />
-          </div>
+            Generate QR code
+          </label>
+          <Switch
+            id="include-qr-switch"
+            checked={includeQr}
+            onCheckedChange={(checked) => setIncludeQr(Boolean(checked))}
+          />
         </div>
 
         {/* Server errors surface under the form, above the action row */}

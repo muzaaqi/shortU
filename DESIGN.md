@@ -203,9 +203,8 @@ Base unit: 4px.
 ### Shorten Flow Overlay
 
 **`shorten-dialog`** — The create-link flow inside a Responsive Overlay.
-- Labeled `Custom slug` switch above the inputs (muted foreground): off (default) renders the read-only random slug field with domain prefix inner-right and regenerate action; on renders the editable domain-prefixed custom field
-- Decorative QR placeholder: dashed-border square with `QrCode` glyph — never a real QR image until creation
-- QR opt-in is a labeled switch under the glyph; opted-in real QR shows in the result view
+- Labeled `Custom slug` switch sits left of each input label on the same row: off (default) renders the read-only random slug field with domain prefix inner-right and regenerate action; on renders the editable domain-prefixed custom field
+- QR opt-in row: `Generate QR code` label left, switch right; opted-in real QR shows in the result view
 - Footer: Cancel (outline) + Confirm (primary, submits by form id)
 
 ### Interstitial Ad Page
