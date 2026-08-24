@@ -6,11 +6,15 @@
  */
 import { Link as LinkIcon } from "lucide-react";
 import { memo, useCallback, useState } from "react";
+import { OAuthButtons } from "~/components/oauth-buttons";
 import { ShortenDialog } from "~/components/shorten-dialog";
 import { Button } from "~/components/ui/button";
 import { InputGroup, InputGroupInput } from "~/components/ui/input-group";
+import { useSession } from "~/lib/auth";
 
 export const ShortenTrigger = memo(function ShortenTrigger() {
+  const { data: session } = useSession();
+  const isAuthenticated = Boolean(session?.user);
   const [draftUrl, setDraftUrl] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -41,9 +45,14 @@ export const ShortenTrigger = memo(function ShortenTrigger() {
           Shorten URL
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        No account needed. Custom slugs available when you sign in.
-      </p>
+      {!isAuthenticated && (
+        <div className="space-y-3 pt-2 text-center">
+          <p className="text-xs font-medium text-muted-foreground">
+            Login for more features
+          </p>
+          <OAuthButtons className="mx-auto max-w-sm" />
+        </div>
+      )}
       <ShortenDialog open={open} onOpenChange={setOpen} initialUrl={draftUrl.trim()} />
     </div>
   );
