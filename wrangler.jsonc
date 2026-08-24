@@ -1,12 +1,14 @@
 {
+  // Cloudflare Workers config — TanStack Start hosting guide.
+  // main resolves through the package export so the worker bundle and
+  // static assets always ship from the same build.
+  // NOTE: no manual "assets" block — @cloudflare/vite-plugin injects and
+  // manages the asset binding itself during `vite build`.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shortu",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
-  "assets": {
-		"directory": "dist/client"
-	},
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,
@@ -15,6 +17,7 @@
       "head_sampling_rate": 1,
       "persist": true,
       "invocation_logs": true
+    }
   },
   "traces": {
     "enabled": true,
