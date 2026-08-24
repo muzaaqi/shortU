@@ -28,13 +28,12 @@ import {
   InputGroupInput,
 } from "~/components/ui/input-group";
 import { Spinner } from "~/components/ui/spinner";
+import { Switch } from "~/components/ui/switch";
 import { useSession } from "~/lib/auth";
 import { generateSlug } from "~/lib/slugify";
 import { shortenFormSchema, type ShortenFormValues } from "~/lib/schema";
-import { cn, normalizeInputUrl, slugPrefixFromOrigin } from "~/lib/utils";
+import { normalizeInputUrl, slugPrefixFromOrigin } from "~/lib/utils";
 import { createLink, getAppOrigin } from "~/server/functions/links";
-
-type SlugMode = "random" | "custom";
 
 /** Query key for the app origin (moved here from the retired link-form.tsx) */
 const APP_ORIGIN_KEY = ["app", "origin"] as const;
@@ -54,7 +53,8 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
   const isAuthenticated = Boolean(session?.user);
 
   // UI-only state (not form input): options and post-submit result
-  const [slugMode, setSlugMode] = useState<SlugMode>("random");
+  /** Off (default) = server-generated random slug; on = user-chosen custom alias */
+  const [isCustomSlug, setIsCustomSlug] = useState(false);
   const [randomSlug, setRandomSlug] = useState(() => generateSlug());
   const [includeQr, setIncludeQr] = useState(true);
   const [result, setResult] = useState<LinkResultData | null>(null);
@@ -69,7 +69,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
     appOrigin ?? (typeof window !== "undefined" ? window.location.origin : null),
   );
 
-  const customRequiresAuth = slugMode === "custom" && !isAuthenticated;
+  const customRequiresAuth = isCustomSlug && !isAuthenticated;
 
   const mutation = useMutation({
     mutationFn: async (values: ShortenFormValues) => {
@@ -78,7 +78,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
       return createLink({
         data: {
           originalUrl: normalized,
-          ...(slugMode === "custom" && values.customSlug.trim()
+          ...(isCustomSlug && values.customSlug.trim()
             ? { customSlug: values.customSlug.trim() }
             : {}),
         },
@@ -127,7 +127,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
     setResult(null);
     form.reset();
     setRandomSlug(generateSlug());
-    setSlugMode("random");
+    setIsCustomSlug(false);
     setIncludeQr(true);
   }, [form]);
 
@@ -181,32 +181,31 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
           }}
         </form.Field>
 
-        {/* Segmented Random | Custom toggle (UI-only state, outside the form) */}
+        {/* Custom slug mode — off (default) renders the random field, on renders the custom field */}
         <div className="space-y-2 text-left">
-          <div className="inline-flex rounded-full border border-border bg-secondary p-1">
-            {(["random", "custom"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setSlugMode(mode)}
-                aria-pressed={slugMode === mode}
-                className={cn(
-                  "cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-colors",
-                  slugMode === mode
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {mode} slug
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="custom-slug-switch"
+              className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
+            >
+              Custom slug
+            </label>
+            <Switch
+              id="custom-slug-switch"
+              checked={isCustomSlug}
+              onCheckedChange={(checked) => setIsCustomSlug(Boolean(checked))}
+            />
           </div>
 
-          {slugMode === "random" ? (
+          {!isCustomSlug ? (
             /* Read-only generated slug — deliberately NOT a form field */
-            <div className="space-y-1">
+            <Field>
+              <FieldLabel htmlFor="random-slug-input" className="text-xs font-medium text-foreground">
+                Random Slug
+              </FieldLabel>
               <InputGroup className="h-11 bg-card">
                 <InputGroupInput
+                  id="random-slug-input"
                   value={randomSlug}
                   readOnly
                   aria-label="Generated slug"
@@ -214,6 +213,10 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   tabIndex={-1}
                   className="select-all font-mono"
                 />
+                {/* Domain display, inner-right (mirrors custom slug's inner-left) */}
+                <InputGroupAddon align="inline-end" className="font-mono text-xs text-muted-foreground">
+                  {slugPrefix}
+                </InputGroupAddon>
                 <InputGroupAddon align="inline-end">
                   <Button
                     type="button"
@@ -231,7 +234,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
               <p className="text-xs text-muted-foreground">
                 Generated for you — click refresh for a different one.
               </p>
-            </div>
+            </Field>
           ) : (
             /* Editable custom slug with live domain prefix (inner-left) */
             <form.Field name="customSlug">
@@ -289,20 +292,19 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
           >
             <QrCode className="size-14" />
           </div>
-          <button
-            type="button"
-            onClick={() => setIncludeQr((v) => !v)}
-            aria-pressed={includeQr}
-            className={cn(
-              "inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-              includeQr
-                ? "bg-success-subtle text-brand-mint"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <QrCode className="size-3.5" />
-            {includeQr ? "QR code will be generated" : "Generate QR code"}
-          </button>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="include-qr-switch"
+              className="cursor-pointer select-none text-xs font-medium text-muted-foreground"
+            >
+              Generate QR code
+            </label>
+            <Switch
+              id="include-qr-switch"
+              checked={includeQr}
+              onCheckedChange={(checked) => setIncludeQr(Boolean(checked))}
+            />
+          </div>
         </div>
 
         {/* Server errors surface under the form, above the action row */}
