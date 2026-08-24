@@ -1,56 +1,31 @@
 /**
- * Device-class detection for responsive overlays.
- * useMobile reports whether the viewport is below the mobile breakpoint,
- * backed by a matchMedia subscription via useSyncExternalStore (SSR-safe:
- * the server snapshot is always false, so SSR renders the desktop variant).
- * MobileContent/DesktopContent conditionally mount children so only one
- * overlay shell (Drawer vs Dialog) ever exists in the DOM.
+ * Device-class detection for responsive overlays (muzone-universe pattern).
+ * State syncs with matchMedia inside an effect, so SSR renders the desktop
+ * shell first with zero hydration mismatch — mobile sees one brief
+ * desktop-styled frame before correcting.
  * Used by: src/components/ui/responsive-overlay.tsx
  */
-import { type ReactNode, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 /** Viewports narrower than this are treated as mobile (Drawer surfaces). */
 export const MOBILE_BREAKPOINT = 768;
 
-function subscribe(onChange: () => void): () => void {
-  const query = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
-  const mediaQueryList = window.matchMedia(query);
-  mediaQueryList.addEventListener("change", onChange);
-  return () => mediaQueryList.removeEventListener("change", onChange);
-}
-
-function getSnapshot(): boolean {
-  return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`).matches;
-}
-
-function getServerSnapshot(): boolean {
-  return false;
-}
-
 /**
  * Reports whether the current viewport is mobile-sized.
- * Used by: MobileContent, DesktopContent
+ * Used by: src/components/ui/responsive-overlay.tsx
  */
 export function useMobile(): boolean {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-}
+  const [isMobile, setIsMobile] = useState(false);
 
-/**
- * Mounts children only on mobile-sized viewports.
- * Used by: src/components/ui/responsive-overlay.tsx
- */
-export function MobileContent({ children }: { children: ReactNode }) {
-  const isMobile = useMobile();
-  if (!isMobile) return null;
-  return <>{children}</>;
-}
+  useEffect(() => {
+    const mediaQueryList = window.matchMedia(
+      `(max-width: ${MOBILE_BREAKPOINT - 1}px)`,
+    );
+    const handleChange = () => setIsMobile(mediaQueryList.matches);
+    setIsMobile(mediaQueryList.matches);
+    mediaQueryList.addEventListener("change", handleChange);
+    return () => mediaQueryList.removeEventListener("change", handleChange);
+  }, []);
 
-/**
- * Mounts children only on tablet/desktop viewports.
- * Used by: src/components/ui/responsive-overlay.tsx
- */
-export function DesktopContent({ children }: { children: ReactNode }) {
-  const isMobile = useMobile();
-  if (isMobile) return null;
-  return <>{children}</>;
+  return isMobile;
 }
