@@ -194,6 +194,24 @@ Base unit: 4px.
 - **`Switch (checked)`** — Background `bg-[var(--brand-amber)]`, thumb white.
 - **`Switch (unchecked)`** — Background `bg-input`, thumb white.
 
+### Responsive Overlay
+
+**`responsive-overlay`** — The single shell for all modal surfaces. Renders a bottom-sheet **Drawer** below 768px and a centered **Dialog** at 768px+, driven by `useMobile()` (`src/hooks/use-mobile.tsx`). Callers pass one body + optional footer; only the chrome differs.
+- Body: `px-4` (Drawer) / `py-2` (Dialog)
+- Footer: right-aligned action row under a hairline separator (`border-t border-border`)
+- Width passthrough via `contentClassName` (default `sm:max-w-md`)
+- Close actions always call the open-state callback — never shell-specific parts
+
+### Shorten Flow Overlay
+
+**`shorten-dialog`** — The create-link flow inside a Responsive Overlay.
+- Segmented **Random | Custom** slug toggle: pill container `bg-secondary rounded-full`, active segment `bg-primary text-primary-foreground`
+- Random mode: read-only mono input pre-filled with `nanoid(7)` + regenerate icon button inner-right
+- Custom mode: domain prefix inner-left (`font-mono text-muted-foreground`) + editable validated input
+- Decorative QR placeholder: dashed-border square with `QrCode` glyph — never a real QR image until creation
+- Optional "Generate QR code" pill: pressed state `bg-success-subtle text-brand-mint`
+- Footer: Cancel (outline) + Confirm (primary, submits by form id)
+
 ### Interstitial Ad Page
 
 **`interstitial-page`** — Light page canvas (`--canvas`) with a single elevated dark destination card `bg-[var(--surface-dark)]`, rounded-xl (20px), shadow. The dark card is the focal point; the surrounding canvas keeps the app shell (nav/footer) coherent.

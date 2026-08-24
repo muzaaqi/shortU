@@ -1,6 +1,6 @@
 /**
  * Slug generation and validation utilities.
- * Used by: src/server/functions/links.ts, src/components/link-form.tsx
+ * Used by: src/server/functions/links.ts, src/components/shorten-dialog.tsx, src/lib/schema
  */
 import { nanoid } from "nanoid";
 

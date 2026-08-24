@@ -6,7 +6,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, QrCode, Radio, Zap } from "lucide-react";
-import { LinkForm } from "~/components/link-form";
+import { ShortenTrigger } from "~/components/shorten-trigger";
 
 export const Route = createFileRoute("/")({
   component: IndexPage,
@@ -27,7 +27,7 @@ function IndexPage() {
         </div>
 
         {/* Hero Input Shortener */}
-        <LinkForm />
+        <ShortenTrigger />
 
         {/* Editorial Value Section */}
         <div className="pt-16 sm:pt-20 border-t border-border text-left space-y-8">

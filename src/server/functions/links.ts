@@ -45,7 +45,7 @@ async function resolveOrigin(): Promise<string> {
 /**
  * Returns the app's public origin (e.g. "https://shortu.dev") for client-side
  * display, such as the custom-slug input prefix.
- * Used by: src/components/link-form.tsx
+ * Used by: src/components/shorten-dialog.tsx
  */
 export const getAppOrigin = createServerFn({ method: "GET" }).handler(async () => {
   return resolveOrigin();
@@ -55,7 +55,7 @@ export const getAppOrigin = createServerFn({ method: "GET" }).handler(async () =
  * Creates a new short link.
  * Validates original URL and optional custom slug, checks collision,
  * generates QR code, and persists record to Neon PostgreSQL.
- * Used by: src/components/link-form.tsx
+ * Used by: src/components/shorten-dialog.tsx
  */
 export const createLink = createServerFn({ method: "POST" })
   .validator((data: CreateLinkInput) => {

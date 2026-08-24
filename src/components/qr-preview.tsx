@@ -1,7 +1,7 @@
 /**
  * QR Code preview and download component.
  * Displays high-contrast base64 QR code with direct PNG download button.
- * Used by: src/components/link-form.tsx, src/components/link-card.tsx
+ * Used by: src/components/link-result.tsx, src/components/link-card.tsx
  */
 import { Download } from "lucide-react";
 import { memo, useCallback } from "react";

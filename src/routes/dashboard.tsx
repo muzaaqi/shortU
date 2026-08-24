@@ -19,7 +19,7 @@ import {
 import { useState } from "react";
 import { AuthModal } from "~/components/auth-modal";
 import { LinkCard, type LinkItem } from "~/components/link-card";
-import { LinkForm } from "~/components/link-form";
+import { ShortenDialog } from "~/components/shorten-dialog";
 import { Button } from "~/components/ui/button";
 import {
   Empty,
@@ -120,17 +120,11 @@ function DashboardPage() {
           </p>
         </div>
         <Button
-          onClick={() => setShowCreate(!showCreate)}
+          onClick={() => setShowCreate(true)}
           className="gap-2 bg-primary text-primary-foreground font-semibold shadow-xs cursor-pointer"
         >
-          {showCreate ? (
-            "Cancel"
-          ) : (
-            <>
-              <Plus className="size-4" />
-              Create New Link
-            </>
-          )}
+          <Plus className="size-4" />
+          Create New Link
         </Button>
       </div>
 
@@ -170,16 +164,6 @@ function DashboardPage() {
               </p>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Expandable Link Creation Form */}
-      {showCreate && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-          <h2 className="text-base font-semibold text-foreground mb-4 text-left">
-            Shorten a New URL
-          </h2>
-          <LinkForm />
         </div>
       )}
 
@@ -274,6 +258,9 @@ function DashboardPage() {
           ))}
         </div>
       )}
+
+      {/* Unified create-link overlay (Drawer on mobile, Dialog on desktop) */}
+      <ShortenDialog open={showCreate} onOpenChange={setShowCreate} />
     </div>
   );
 }
