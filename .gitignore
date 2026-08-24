@@ -37,3 +37,4 @@ scratch/*
 debug
 
 opencode.json
+.dev.vars

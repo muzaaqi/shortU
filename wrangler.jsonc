@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers config — TanStack Start hosting guide.
+  // main resolves through the package export so the worker bundle and
+  // static assets always ship from the same build (prevents serverFn
+  // registry mismatches like "Server function info not found").
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shortu",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry"
+}
