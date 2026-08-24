@@ -1,14 +1,16 @@
 /**
- * Reusable responsive overlay shell: bottom-sheet Drawer on mobile (<768px),
- * centered Dialog on tablet/desktop. Both shells render identical header,
- * body, and footer content — callers pass content once, the shell adapts.
- * Close actions in footers must call onOpenChange(false); never embed
- * shell-specific parts like DialogClose here (they break across contexts).
+ * Responsive overlay shell: renders the FULL native Drawer on mobile (<768px)
+ * or native Dialog on tablet/desktop around identical feature content.
+ * Each shell supplies its own close affordance (DrawerClose/DialogClose X)
+ * and default layout parts — callers provide only title/description/content.
+ * Feature action rows belong inside children so they are shell-agnostic.
  * Used by: src/components/shorten-dialog.tsx, src/components/auth-modal.tsx
  */
+import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   Dialog,
+  DialogClose,
   DialogDescription,
   DialogHeader,
   DialogPopup,
@@ -16,9 +18,9 @@ import {
 } from "~/components/ui/dialog";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "~/components/ui/drawer";
@@ -34,17 +36,19 @@ export interface ResponsiveOverlayProps {
   title: string;
   /** Optional supporting text under the title. */
   description?: string;
-  /** Body content — identical across shells. */
+  /** Feature content — body plus its own action row, identical in both shells. */
   children: ReactNode;
-  /** Optional action row, right-aligned under a hairline separator. */
-  footer?: ReactNode;
-  /** Passthrough class for shell width tweaks (e.g. "sm:max-w-lg"). */
+  /** Width passthrough for the desktop shell (e.g. "sm:max-w-sm"). */
   contentClassName?: string;
 }
 
+/** Shared classes for the native close buttons in each shell. */
+const closeClasses =
+  "absolute right-4 top-4 flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer";
+
 /**
- * Renders children in a Drawer on mobile or a Dialog on tablet/desktop,
- * keeping markup, state, and focus management in exactly one live shell.
+ * Picks Drawer vs Dialog by viewport and renders the given content inside
+ * the full native shell — one live shell at a time, zero call-site overrides.
  * Used by: src/components/shorten-dialog.tsx, src/components/auth-modal.tsx
  */
 export function ResponsiveOverlay({
@@ -53,7 +57,6 @@ export function ResponsiveOverlay({
   title,
   description,
   children,
-  footer,
   contentClassName,
 }: ResponsiveOverlayProps) {
   return (
@@ -61,15 +64,15 @@ export function ResponsiveOverlay({
       {/* Mobile: bottom sheet */}
       <MobileContent>
         <Drawer open={open} onOpenChange={onOpenChange}>
-          <DrawerContent className={cn("max-h-[85vh] overflow-y-auto", contentClassName)}>
-            <DrawerHeader className="text-left">
+          <DrawerContent className={cn("relative", contentClassName)}>
+            <DrawerClose className={closeClasses} title="Close">
+              <X className="size-4" />
+            </DrawerClose>
+            <DrawerHeader className="pr-10 text-left">
               <DrawerTitle>{title}</DrawerTitle>
               {description && <DrawerDescription>{description}</DrawerDescription>}
             </DrawerHeader>
-            <div className="px-4 pb-2">{children}</div>
-            {footer && (
-              <DrawerFooter className="flex-row justify-end gap-2">{footer}</DrawerFooter>
-            )}
+            <div className="px-4 pb-4">{children}</div>
           </DrawerContent>
         </Drawer>
       </MobileContent>
@@ -77,17 +80,15 @@ export function ResponsiveOverlay({
       {/* Tablet/Desktop: centered dialog */}
       <DesktopContent>
         <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogPopup className={cn("sm:max-w-md", contentClassName)}>
+          <DialogPopup className={cn("relative sm:max-w-md", contentClassName)}>
+            <DialogClose className={closeClasses} title="Close">
+              <X className="size-4" />
+            </DialogClose>
             <DialogHeader>
               <DialogTitle>{title}</DialogTitle>
               {description && <DialogDescription>{description}</DialogDescription>}
             </DialogHeader>
             <div className="py-2">{children}</div>
-            {footer && (
-              <div className="mt-2 flex justify-end gap-2 border-t border-border pt-3">
-                {footer}
-              </div>
-            )}
           </DialogPopup>
         </Dialog>
       </DesktopContent>
