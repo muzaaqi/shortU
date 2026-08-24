@@ -196,11 +196,9 @@ Base unit: 4px.
 
 ### Responsive Overlay
 
-**`responsive-overlay`** — The single shell for all modal surfaces. Renders a bottom-sheet **Drawer** below 768px and a centered **Dialog** at 768px+, driven by `useMobile()` (`src/hooks/use-mobile.tsx`). Callers pass one body + optional footer; only the chrome differs.
-- Body: `px-4` (Drawer) / `py-2` (Dialog)
-- Footer: right-aligned action row under a hairline separator (`border-t border-border`)
+**`responsive-overlay`** — The single shell for all modal surfaces. Renders a bottom-sheet **Drawer** below 768px and a centered **Dialog** at 768px+, driven by `useMobile()` (`src/hooks/use-mobile.tsx`). The primitive wraps the FULL native components: each shell supplies its own close affordance (native `DrawerClose`/`DialogClose` X, top-right) and default layout parts — callers provide only title/description/content.
+- Body content is shell-agnostic; feature action rows live at the end of content under a hairline separator (`border-t border-border`)
 - Width passthrough via `contentClassName` (default `sm:max-w-md`)
-- Close actions always call the open-state callback — never shell-specific parts
 
 ### Shorten Flow Overlay
 

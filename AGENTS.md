@@ -556,8 +556,10 @@ Quick reference: which file is used where.
 | `~/hooks/use-mobile.tsx` | `components/ui/responsive-overlay.tsx` |
 | `~/components/ui/*` | Feature components |
 | `~/components/ui/responsive-overlay.tsx` | `shorten-dialog.tsx`, `auth-modal.tsx` |
+| `~/components/oauth-buttons.tsx` | `auth-modal.tsx`, `shorten-trigger.tsx` |
 | `~/components/shorten-trigger.tsx` | `routes/index.tsx` |
 | `~/components/shorten-dialog.tsx` | `routes/index.tsx` (via shorten-trigger), `routes/dashboard.tsx` |
+| `~/components/shorten-dialog-content.tsx` | `components/shorten-dialog.tsx` |
 | `~/components/link-result.tsx` | `components/shorten-dialog.tsx` |
 | `~/components/link-card.tsx` | `routes/dashboard.tsx` |
 | `~/components/qr-preview.tsx` | `components/link-result.tsx`, `components/link-card.tsx` |
