@@ -7,12 +7,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, QrCode, Radio, Zap } from "lucide-react";
 import { ShortenTrigger } from "~/components/shorten-trigger";
+import { slugPrefixFromOrigin } from "~/lib/utils";
+import { getAppOrigin } from "~/server/functions/links";
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const origin = await getAppOrigin();
+    return { origin };
+  },
   component: IndexPage,
 });
 
 function IndexPage() {
+  const { origin } = Route.useLoaderData();
+  const slugPrefix = slugPrefixFromOrigin(origin) || "shortu.dev/";
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-7.25rem)] px-4 py-12 sm:py-20 text-center">
       <div className="max-w-4xl mx-auto space-y-12 sm:space-y-16">
@@ -51,7 +60,7 @@ function IndexPage() {
                 Clean 7-character nanoid slugs with lean HTTP 301 redirection at the edge. Zero intermediate latency or tracking scripts for standard links.
               </p>
               <div className="inline-flex items-center text-xs font-mono text-muted-foreground bg-secondary/80 px-2.5 py-1 rounded-md border border-border">
-                <span>shortu.dev/</span>
+                <span>{slugPrefix}</span>
                 <span className="font-semibold text-foreground">xK9pL2q</span>
               </div>
             </div>
