@@ -6,13 +6,13 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
-import { Link2, MousePointerClick } from "lucide-react";
+import { Link2, LogOut, MousePointerClick } from "lucide-react";
 import { memo, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
 import { signOut, useSession } from "~/lib/auth";
 import { cn } from "~/lib/utils";
 import { getUserStats } from "~/server/functions/links";
+import { Separator } from "./ui/separator";
 
 /** Query key for user aggregate stats. */
 export const USER_STATS_KEYS = {
@@ -86,47 +86,57 @@ export const UserProfilePanel = memo(function UserProfilePanel({
           <span className="text-sm font-semibold text-foreground truncate leading-snug">
             {user.name || "User"}
           </span>
-          <span className="text-xs text-muted-foreground truncate leading-snug">
-            {user.email}
-          </span>
+          <span className="text-xs text-muted-foreground truncate leading-snug">{user.email}</span>
         </div>
       </div>
 
       {/* ── Hairline separator ───────────────────────────── */}
-      <div className="border-t border-border" />
+      <Separator />
 
       {/* ── Section 2: Stats mini-card ───────────────────── */}
-      <Card size="sm" className="mx-1">
-        <CardContent className="flex items-center justify-around gap-2 py-2">
-          {/* URL count */}
-          <div className="flex flex-col items-center gap-0.5" title="Total links">
-            <Link2 className="size-3.5 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground tabular-nums">
-              {stats?.linkCount ?? 0}
-            </span>
-          </div>
-          {/* Divider */}
-          <div className="w-px h-6 bg-border" />
-          {/* Total clicks */}
-          <div className="flex flex-col items-center gap-0.5" title="Total clicks">
-            <MousePointerClick className="size-3.5 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground tabular-nums">
-              {stats?.totalClicks ?? 0}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Summary Telemetry Metrics */}
+      {stats && (
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            {
+              label: "Active",
+              value: String(stats?.linkCount ?? 0),
+              icon: <Link2 className="size-4" />,
+              accent: "text-primary",
+            },
+            {
+              label: "Clicks",
+              value: stats?.totalClicks.toLocaleString(),
+              icon: <MousePointerClick className="size-4" />,
+              accent: "text-primary",
+            },
+          ].map((metric) => (
+            <div
+              key={metric.label}
+              className="rounded-xl border border-border bg-card p-4 space-y-1 shadow-2xs"
+            >
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <span className={metric.accent}>{metric.icon}</span>
+                <span>{metric.label}</span>
+              </div>
+              <p className="text-2xl font-bold tracking-tight text-foreground font-mono">
+                {metric.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Section 3: Sign out ──────────────────────────── */}
-      <div className="mx-1">
-        <Button
-          variant="destructive"
-          className="w-full cursor-pointer"
-          onClick={handleSignOut}
-        >
-          Sign out
-        </Button>
-      </div>
+      <Button
+        variant="destructive"
+        size="lg"
+        className="w-full cursor-pointer"
+        onClick={handleSignOut}
+      >
+        <LogOut />
+        Sign out
+      </Button>
     </div>
   );
 });

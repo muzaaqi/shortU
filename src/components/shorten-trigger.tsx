@@ -9,7 +9,7 @@ import { memo, useCallback, useState } from "react";
 import { OAuthButtons } from "~/components/oauth-buttons";
 import { ShortenDialog } from "~/components/shorten-dialog";
 import { Button } from "~/components/ui/button";
-import { InputGroup, InputGroupInput } from "~/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "~/components/ui/input-group";
 import { useSession } from "~/lib/auth";
 
 export const ShortenTrigger = memo(function ShortenTrigger() {
@@ -35,11 +35,24 @@ export const ShortenTrigger = memo(function ShortenTrigger() {
             aria-label="Destination web address"
             autoComplete="off"
           />
+          {/* Always-available paste affordance, inner-right */}
+          <InputGroupAddon align="inline-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handlePaste}
+              title="Paste from clipboard"
+              aria-label="Paste from clipboard"
+              className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Clipboard className="size-4" />
+            </Button>
+          </InputGroupAddon>
         </InputGroup>
         <Button
           onClick={handleOpen}
           disabled={!draftUrl.trim()}
-          className="h-12 min-w-[140px] cursor-pointer whitespace-nowrap px-6 font-semibold shadow-xs transition-all active:scale-[0.98]"
+          className="h-12 min-w-35 cursor-pointer whitespace-nowrap px-6 font-semibold shadow-xs transition-all active:scale-[0.98]"
         >
           <LinkIcon className="mr-1 size-4" />
           Shorten URL

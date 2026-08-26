@@ -33,15 +33,15 @@ export const ThemeToggle = memo(function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon-sm"
+      size="icon-lg"
       onClick={handleToggle}
       title="Toggle dark mode"
       aria-label="Toggle dark mode"
       className="text-muted-foreground hover:text-foreground cursor-pointer"
     >
       {/* CSS-only swap keeps SSR output stable regardless of active theme */}
-      <Sun className="size-3.5 dark:hidden" />
-      <Moon className="hidden size-3.5 dark:block" />
+      <Sun className="size-4 dark:hidden" />
+      <Moon className="hidden size-4 dark:block" />
     </Button>
   );
 });

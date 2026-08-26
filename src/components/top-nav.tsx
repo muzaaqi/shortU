@@ -93,35 +93,35 @@ export const TopNav = memo(function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-[60px] max-w-5xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-20 max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link
           to="/"
           className="flex items-center gap-2 font-semibold text-foreground tracking-tight"
         >
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Link2 className="size-4" />
+          <div className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Link2 className="size-5" />
           </div>
-          <span>
+          <span className="text-xl">
             short<span className="text-primary font-bold">U</span>
           </span>
         </Link>
 
         {/* Right cluster */}
         <nav className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <ThemeToggle />
           {/* Dashboard link — only visible when logged in */}
           {user && (
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors [&.active]:text-foreground [&.active]:font-semibold [&.active]:bg-secondary/80"
+              className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors [&.active]:text-foreground [&.active]:font-semibold"
             >
-              <LayoutDashboard className="size-3.5 shrink-0" />
+              <LayoutDashboard className="size-4 shrink-0" />
               <span className="hidden sm:inline">Dashboard</span>
             </Link>
           )}
 
-          {/* Theme toggle */}
-          <ThemeToggle />
 
           {/* Profile area */}
           {isPending ? (
@@ -130,11 +130,10 @@ export const TopNav = memo(function TopNav() {
             <>
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => setShowAuthModal(true)}
-                className="gap-1.5 text-xs font-semibold h-8 px-3 border-border hover:bg-secondary cursor-pointer transition-all active:scale-[0.98]"
+                className="gap-2 font-semibold h-9 px-3 hover:bg-secondary cursor-pointer transition-all active:scale-[0.98]"
               >
-                <LogIn className="size-3.5" />
+                <LogIn className="size-4" />
                 <span>Sign In</span>
               </Button>
               <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
