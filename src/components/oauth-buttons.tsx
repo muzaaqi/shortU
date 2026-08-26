@@ -2,8 +2,9 @@
  * Reusable Google/GitHub OAuth sign-in buttons.
  * Starts the Better Auth social redirect directly on click (no intermediate
  * modal logic) with per-provider pending spinners.
- * Orientation stacks providers vertically (default) or lays them out in a
- * single equal-width row.
+ * Orientation stacks providers vertically (default) or lays them out in an
+ * equal-width row — horizontal collapses back to the vertical stack below
+ * the `sm` breakpoint so it never overflows narrow screens.
  * Used by: src/components/auth-modal.tsx, src/components/shorten-trigger.tsx
  */
 import { memo, useState } from "react";
@@ -62,7 +63,10 @@ export const OAuthButtons = memo(function OAuthButtons({
   return (
     <div
       className={cn(
-        isHorizontal ? "flex flex-row gap-3" : "flex flex-col space-y-3",
+        isHorizontal
+          ? // Horizontal collapses to the vertical stack below `sm`
+            "flex flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0"
+          : "flex flex-col space-y-3",
         className,
       )}
     >
@@ -82,7 +86,7 @@ export const OAuthButtons = memo(function OAuthButtons({
         disabled={loadingProvider !== null}
         className={cn(
           "h-11 justify-center gap-3 border-border font-medium transition-all hover:bg-secondary/60 active:scale-[0.99] cursor-pointer",
-          isHorizontal ? "flex-1" : "w-full",
+          isHorizontal ? "w-full sm:w-auto sm:flex-1" : "w-full",
         )}
       >
         {loadingProvider === "google" ? (
@@ -117,7 +121,7 @@ export const OAuthButtons = memo(function OAuthButtons({
         disabled={loadingProvider !== null}
         className={cn(
           "h-11 justify-center gap-3 border-border font-medium transition-all hover:bg-secondary/60 active:scale-[0.99] cursor-pointer",
-          isHorizontal ? "flex-1" : "w-full",
+          isHorizontal ? "w-full sm:w-auto sm:flex-1" : "w-full",
         )}
       >
         {loadingProvider === "github" ? (
