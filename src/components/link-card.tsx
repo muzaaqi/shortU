@@ -9,6 +9,7 @@
  * Used by: src/routes/dashboard.tsx
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Image } from "@unpic/react";
 import {
   Ad,
   Check,
@@ -134,7 +135,7 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
               <Globe className="size-4 text-muted-foreground" />
             </div>
           ) : (
-            <img
+            <Image
               src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
               alt=""
               aria-hidden="true"
