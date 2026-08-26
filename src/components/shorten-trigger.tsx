@@ -4,12 +4,13 @@
  * page stays minimal while configuration happens in the overlay.
  * Used by: src/routes/index.tsx (replaces former inline LinkForm usage)
  */
-import { Link as LinkIcon } from "lucide-react";
+import { Clipboard, Link as LinkIcon } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { OAuthButtons } from "~/components/oauth-buttons";
 import { ShortenDialog } from "~/components/shorten-dialog";
 import { Button } from "~/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "~/components/ui/input-group";
+import { useClipboardPaste } from "~/hooks/use-clipboard-paste";
 import { useSession } from "~/lib/auth";
 
 export const ShortenTrigger = memo(function ShortenTrigger() {
@@ -18,8 +19,14 @@ export const ShortenTrigger = memo(function ShortenTrigger() {
   const [draftUrl, setDraftUrl] = useState("");
   const [open, setOpen] = useState(false);
 
+  /** Pastes clipboard text into the draft URL input. */
+  const { paste: handlePaste } = useClipboardPaste((text) => {
+    setDraftUrl(text);
+  });
+
   /** Opens the overlay with the typed URL as the starting point. */
   const handleOpen = useCallback(() => setOpen(true), []);
+  
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-3">

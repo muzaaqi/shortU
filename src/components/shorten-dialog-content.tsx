@@ -32,6 +32,7 @@ import {
 } from "~/components/ui/label";
 import { Spinner } from "~/components/ui/spinner";
 import { Switch } from "~/components/ui/switch";
+import { useClipboardPaste } from "~/hooks/use-clipboard-paste";
 import { useSession } from "~/lib/auth";
 import { generateSlug } from "~/lib/slugify";
 import { shortenFormSchema, type ShortenFormValues } from "~/lib/schema";
@@ -116,14 +117,9 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
   const handleRegenerate = useCallback(() => setRandomSlug(generateSlug()), []);
 
   /** Pastes clipboard text into the URL field when permission allows. */
-  const handlePaste = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard?.readText?.();
-      if (text) form.setFieldValue("url", text.trim());
-    } catch {
-      // Clipboard permission denied — silently ignore
-    }
-  }, [form]);
+  const { paste: handlePaste } = useClipboardPaste((text) => {
+    form.setFieldValue("url", text);
+  });
 
   /** Clears the result back to an empty form for another round. */
   const handleReset = useCallback(() => {
