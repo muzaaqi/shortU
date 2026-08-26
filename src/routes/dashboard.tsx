@@ -130,22 +130,22 @@ function DashboardPage() {
 
       {/* Summary Telemetry Metrics */}
       {links.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {[
             {
-              label: "Total Active Links",
+              label: "Active",
               value: String(links.length),
               icon: <Link2 className="size-3.5" />,
               accent: "text-primary",
             },
             {
-              label: "Total Clicks Tracked",
+              label: "Clicks",
               value: totalClicks.toLocaleString(),
               icon: <BarChart3 className="size-3.5" />,
               accent: "text-primary",
             },
             {
-              label: "Monetized Ad Links",
+              label: "Ads",
               value: String(totalAdLinks),
               icon: <Radio className="size-3.5" />,
               accent: "text-brand-amber",
