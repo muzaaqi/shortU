@@ -2,6 +2,8 @@
  * Slug redirection handler.
  * Hot-path loader that looks up slug in database and executes direct 301 redirect
  * or forwards to /go/$slug when adEnabled is true.
+ * Click telemetry is awaited before the redirect: on Cloudflare Workers,
+ * fire-and-forget promises are cancelled once the response flushes.
  * Used by: TanStack Router for route "/$slug"
  */
 import { createFileRoute, redirect } from "@tanstack/react-router";
@@ -30,9 +32,7 @@ export const Route = createFileRoute("/$slug")({
     // Skipped on hover/intent prefetches (cause === "preload") so phantom
     // loader runs never inflate the click counter — only real navigations count.
     if (cause !== "preload") {
-      trackClick({ data: { linkId: link.id } }).catch(() => {
-        // ignore telemetry errors
-      });
+      await trackClick({ data: { linkId: link.id } });
     }
 
     // Direct HTTP 301 redirect

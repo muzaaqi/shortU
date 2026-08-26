@@ -1,6 +1,8 @@
 /**
  * Interstitial ad route handler (/go/$slug).
  * Renders destination preview, sponsored ad placement, and automated countdown.
+ * Click telemetry is awaited before rendering: on Cloudflare Workers,
+ * fire-and-forget promises can be cancelled once the response flushes.
  * Surface Mode: Experience
  * Used by: TanStack Router for route "/go/$slug"
  */
@@ -23,9 +25,7 @@ export const Route = createFileRoute("/go/$slug")({
     // Fire-and-forget click telemetry. Skipped on hover/intent prefetches
     // (cause === "preload") so phantom loader runs never inflate the counter.
     if (cause !== "preload") {
-      trackClick({ data: { linkId: link.id } }).catch(() => {
-        // ignore telemetry errors
-      });
+      await trackClick({ data: { linkId: link.id } });
     }
 
     return { link };
