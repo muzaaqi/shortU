@@ -9,6 +9,7 @@
  * Used by: src/routes/dashboard.tsx
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import {
   Ad,
@@ -136,28 +137,29 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
             </div>
           ) : (
             <Image
-              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+              src={`https://icons.favicone.com/i/${domain}/favicon.ico`}
               alt=""
               aria-hidden="true"
               loading="lazy"
               width={40}
               height={40}
               onError={() => setFaviconFailed(true)}
-              className="size-10 shrink-0 rounded-lg border border-border bg-white object-contain p-1.5 select-none"
+              className="size-10 shrink-0 object-contain select-none"
             />
           )}
 
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
-              <a
-                href={shortUrl}
+              <Link
+                to="/$slug"
+                params={{ slug: link.slug }}
                 target="_blank"
                 rel="noreferrer"
                 className="truncate font-mono text-sm font-semibold text-foreground hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                 title={`Open ${shortUrl} in new tab`}
               >
                 /{link.slug}
-              </a>
+              </Link>
               <Button
                 variant="ghost"
                 size="icon-xs"
@@ -183,15 +185,15 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
               </Badge>
             </div>
 
-            <a
-              href={link.originalUrl}
+            <Link
+              to={link.originalUrl}
               target="_blank"
               rel="noreferrer"
               className="mt-0.5 block truncate font-mono text-xs text-muted-foreground hover:text-body transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
               title={link.originalUrl}
             >
               {link.originalUrl}
-            </a>
+            </Link>
           </div>
         </div>
 
