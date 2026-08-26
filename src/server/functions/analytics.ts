@@ -19,7 +19,9 @@ export interface GetLinkStatsInput {
 
 /**
  * Tracks a click on a shortened link.
- * Inserts an event into the clicks table and atomically increments the link's click count.
+ * Inserts an event into the clicks table and atomically increments the link's
+ * click count via db.batch — the neon-http driver executes batched statements
+ * as a single server-side transaction over one HTTP round-trip.
  * Fail-safe: Returns null on database error rather than interrupting user redirection.
  */
 export const trackClick = createServerFn({ method: "POST" })
@@ -31,24 +33,24 @@ export const trackClick = createServerFn({ method: "POST" })
       const clickId = nanoid();
       const now = new Date();
 
-      await db.transaction(async (tx) => {
-        // Insert click telemetry record
-        await tx.insert(clicks).values({
+      // Atomic pair: click event insert + counter increment.
+      // db.transaction() is unsupported on neon-http; batch() is its
+      // transactional equivalent on this driver.
+      await db.batch([
+        db.insert(clicks).values({
           id: clickId,
           linkId: data.linkId,
           clickedAt: now,
           userAgent: data.userAgent ?? null,
-        });
-
-        // Atomically increment link click counter
-        await tx
+        }),
+        db
           .update(links)
           .set({
             clickCount: sql`${links.clickCount} + 1`,
             updatedAt: now,
           })
-          .where(eq(links.id, data.linkId));
-      });
+          .where(eq(links.id, data.linkId)),
+      ]);
 
       return { success: true, clickId };
     } catch (error) {
