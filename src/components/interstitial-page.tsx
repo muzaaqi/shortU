@@ -4,6 +4,7 @@
  * Displays destination URL preview, sponsored ad placeholder, and automated countdown CTA.
  * Used by: src/routes/go.$slug.tsx
  */
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, ExternalLink, Globe, Pause, Play, ShieldCheck, Sparkles } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -185,13 +186,13 @@ export const InterstitialPage = memo(function InterstitialPage({
         {/* Fallback Direct Link */}
         <p className="text-xs text-muted-foreground">
           Not redirected automatically?{" "}
-          <a
-            href={link.originalUrl}
+          <Link
+            to={link.originalUrl}
             className="text-foreground underline underline-offset-4 hover:text-primary inline-flex items-center gap-1 font-medium"
           >
             Click here to open directly
             <ExternalLink className="size-3" />
-          </a>
+          </Link>
         </p>
       </div>
     </div>
