@@ -2,6 +2,8 @@
  * Reusable Google/GitHub OAuth sign-in buttons.
  * Starts the Better Auth social redirect directly on click (no intermediate
  * modal logic) with per-provider pending spinners.
+ * Orientation stacks providers vertically (default) or lays them out in a
+ * single equal-width row.
  * Used by: src/components/auth-modal.tsx, src/components/shorten-trigger.tsx
  */
 import { memo, useState } from "react";
@@ -10,14 +12,21 @@ import { Spinner } from "~/components/ui/spinner";
 import { signIn } from "~/lib/auth";
 import { cn } from "~/lib/utils";
 
-export const OAuthButtons = memo(function OAuthButtons({
-  className,
-}: {
+interface OAuthButtonsProps {
   /** Passthrough classes for the stacking container */
   className?: string;
-}) {
+  /** Layout of the provider buttons — vertical (default) or horizontal row */
+  orientation?: "vertical" | "horizontal";
+}
+
+export const OAuthButtons = memo(function OAuthButtons({
+  className,
+  orientation = "vertical",
+}: OAuthButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isHorizontal = orientation === "horizontal";
 
   /**
    * Starts the OAuth redirect flow for the chosen provider.
@@ -51,7 +60,12 @@ export const OAuthButtons = memo(function OAuthButtons({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div
+      className={cn(
+        isHorizontal ? "flex flex-row gap-3" : "flex flex-col space-y-3",
+        className,
+      )}
+    >
       {errorMessage && (
         <p
           role="alert"
@@ -66,7 +80,10 @@ export const OAuthButtons = memo(function OAuthButtons({
         variant="outline"
         onClick={() => handleOAuthSignIn("google")}
         disabled={loadingProvider !== null}
-        className="h-11 w-full justify-center gap-3 border-border font-medium transition-all hover:bg-secondary/60 active:scale-[0.99] cursor-pointer"
+        className={cn(
+          "h-11 justify-center gap-3 border-border font-medium transition-all hover:bg-secondary/60 active:scale-[0.99] cursor-pointer",
+          isHorizontal ? "flex-1" : "w-full",
+        )}
       >
         {loadingProvider === "google" ? (
           <Spinner className="size-4" />
@@ -98,7 +115,10 @@ export const OAuthButtons = memo(function OAuthButtons({
         variant="outline"
         onClick={() => handleOAuthSignIn("github")}
         disabled={loadingProvider !== null}
-        className="h-11 w-full justify-center gap-3 border-border font-medium transition-all hover:bg-secondary/60 active:scale-[0.99] cursor-pointer"
+        className={cn(
+          "h-11 justify-center gap-3 border-border font-medium transition-all hover:bg-secondary/60 active:scale-[0.99] cursor-pointer",
+          isHorizontal ? "flex-1" : "w-full",
+        )}
       >
         {loadingProvider === "github" ? (
           <Spinner className="size-4" />

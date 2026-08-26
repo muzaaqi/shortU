@@ -50,7 +50,7 @@ export const ShortenTrigger = memo(function ShortenTrigger() {
           <p className="text-xs font-medium text-muted-foreground">
             Login for more features
           </p>
-          <OAuthButtons className="mx-auto max-w-sm" />
+          <OAuthButtons orientation="horizontal" className="mx-auto" />
         </div>
       )}
       <ShortenDialog open={open} onOpenChange={setOpen} initialUrl={draftUrl.trim()} />
