@@ -150,7 +150,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                 <FieldLabel htmlFor={field.name} className="text-sm font-semibold text-foreground">
                   Destination Web Address
                 </FieldLabel>
-                <InputGroup className="h-12 bg-card shadow-2xs">
+                <InputGroup className="h-11 bg-card">
                   <InputGroupInput
                     id={field.name}
                     name={field.name}
@@ -166,6 +166,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                     <Button
                       type="button"
                       variant="ghost"
+                      size="icon-sm"
                       onClick={handlePaste}
                       title="Paste from clipboard"
                       aria-label="Paste from clipboard"
@@ -207,6 +208,12 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                 </div>
               </div>
               <InputGroup className="h-11 bg-card">
+                {/* Domain display + regenerate action, inner-right */}
+                <InputGroupAddon
+                  align="inline-start"
+                >
+                  {slugPrefix}
+                </InputGroupAddon>
                 <InputGroupInput
                   id="random-slug-input"
                   value={randomSlug}
@@ -216,22 +223,17 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   tabIndex={-1}
                   className="select-all pl-0"
                 />
-                {/* Domain display + regenerate action, inner-right */}
-                <InputGroupAddon
-                        align="inline-start"
-                      >
-                        {slugPrefix}
-                      </InputGroupAddon>
                 <InputGroupAddon align="inline-end">
                   <Button
                     type="button"
                     variant="ghost"
+                    size="icon-sm"
                     onClick={handleRegenerate}
                     title="Generate a new random slug"
                     aria-label="Generate a new random slug"
-                    className="cursor-pointer text-muted-foreground hover:text-foreground"
+                    className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    <RefreshCw className="size-3.5" />
+                    <RefreshCw className="size-4" />
                   </Button>
                 </InputGroupAddon>
               </InputGroup>

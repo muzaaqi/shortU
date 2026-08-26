@@ -31,7 +31,7 @@ export const ShortenTrigger = memo(function ShortenTrigger() {
   return (
     <div className="w-full max-w-xl mx-auto space-y-3">
       <div className="flex flex-col sm:flex-row gap-2">
-        <InputGroup className="h-12 flex-1 bg-card shadow-2xs">
+        <InputGroup className="h-12 flex-1 shadow-2xs">
           <InputGroupInput
             placeholder="Paste a long URL to shorten..."
             value={draftUrl}
@@ -47,6 +47,7 @@ export const ShortenTrigger = memo(function ShortenTrigger() {
             <Button
               type="button"
               variant="ghost"
+              size="icon-sm"
               onClick={handlePaste}
               title="Paste from clipboard"
               aria-label="Paste from clipboard"
