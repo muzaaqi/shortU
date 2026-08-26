@@ -50,8 +50,8 @@ function IndexPage() {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Clean 7-character nanoid slugs with lean HTTP 301 redirection at the edge. Zero intermediate latency or tracking scripts for standard links.
               </p>
-              <div className="inline-flex items-center gap-1 text-xs font-mono text-muted-foreground bg-secondary/80 px-2.5 py-1 rounded-md border border-border">
-                <span>shortu.dev/</span>
+              <div className="inline-flex items-center text-xs font-mono text-muted-foreground bg-secondary/80 px-2.5 py-1 rounded-md border border-border">
+                <span>{window.location.origin.replace(/^https?:\/\//, "")}/</span>
                 <span className="font-semibold text-foreground">xK9pL2q</span>
               </div>
             </div>

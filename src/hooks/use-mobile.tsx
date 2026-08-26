@@ -8,7 +8,7 @@
 import { useEffect, useState } from "react";
 
 /** Viewports narrower than this are treated as mobile (Drawer surfaces). */
-export const MOBILE_BREAKPOINT = 768;
+export const MOBILE_BREAKPOINT = 640;
 
 /**
  * Reports whether the current viewport is mobile-sized.
