@@ -160,6 +160,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                     onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid || undefined}
                     autoComplete="off"
+                    className="w-1"
                   />
                   {/* Always-available paste affordance, inner-right */}
                   <InputGroupAddon align="inline-end">
@@ -221,7 +222,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   aria-label="Generated slug"
                   aria-readonly="true"
                   tabIndex={-1}
-                  className="select-all pl-0"
+                  className="select-all pl-0 w-1 flex-1"
                 />
                 <InputGroupAddon align="inline-end">
                   <Button
@@ -280,19 +281,21 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value.toLowerCase())}
                         aria-invalid={isInvalid || undefined}
+                        disabled={customRequiresAuth}
                       />
                     </InputGroup>
                     {customRequiresAuth && (
                       <p className="inline-flex items-center gap-1 text-xs text-warning">
                         <Lock className="size-3" />
                         Custom slugs need an account.{" "}
-                        <button
+                        <Button
+                          variant="link"
                           type="button"
                           onClick={() => setShowAuthModal(true)}
-                          className="cursor-pointer font-medium underline underline-offset-2"
+                          className="cursor-pointer px-0 py-0 font-medium text-xs underline underline-offset-2 text-warning"
                         >
                           Sign in
-                        </button>
+                        </Button>
                       </p>
                     )}
                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
