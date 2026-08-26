@@ -114,25 +114,30 @@ Used for **live library documentation**. Before using any library API (TanStack 
 │   │       └── auth/$.ts           # Better Auth catch-all API route
 │   │
 │   ├── server/
+│   │   ├── auth/
+│   │   │   └── session.ts           # getCurrentSession() — plain module fn (NOT a serverFn)
 │   │   ├── db/
-│   │   │   ├── schema.ts           # Drizzle table definitions (canonical schema)
-│   │   │   └── index.ts            # Drizzle client — exports `db`
+│   │   │   ├── schema.ts            # Drizzle table definitions (canonical schema)
+│   │   │   └── index.ts             # Drizzle client — exports `db`
 │   │   │
-│   │   └── functions/              # Server functions (called from client via TanStack Query)
-│   │       ├── links.ts            # createLink, getLinks, getLinkBySlug, deleteLink, toggleAdMode
-│   │       ├── analytics.ts        # trackClick, getLinkStats
-│   │       └── auth.ts             # getSession server function wrapper
+│   │   └── functions/               # Server functions (called from client via TanStack Query)
+│   │       ├── links.ts             # createLink, getLinks, getLinkBySlug, deleteLink, toggleAdMode
+│   │       └── analytics.ts         # trackClick, getLinkStats
 │   │
 │   ├── components/
 │   │   ├── ui/                     # shadcn components (Base UI primitives) — modify here, not at usage sites
-│   │   │   └── responsive-overlay.tsx  # Drawer(<768px)/Dialog(≥768px) adaptive shell for all modals
+│   │   │   ├── responsive-overlay.tsx  # Drawer(<768px)/Dialog(≥768px) adaptive shell for all modals
+│   │   │   ├── alert-dialog.tsx        # Destructive-action confirmation dialog
+│   │   │   └── popover.tsx             # Anchored floating menu (Base UI)
 │   │   ├── auth-modal.tsx          # OAuth sign-in overlay (via ResponsiveOverlay)
+│   │   ├── oauth-buttons.tsx       # Google/GitHub OAuth buttons (orientation: vertical | horizontal)
 │   │   ├── user-nav.tsx            # Nav profile cluster (sign in / avatar / sign out)
 │   │   ├── theme-toggle.tsx        # Dark mode toggle button (localStorage + OS preference)
 │   │   ├── shorten-trigger.tsx      # Landing hero URL input that opens ShortenDialog prefilled
 │   │   ├── shorten-dialog.tsx       # Unified create-link overlay (TanStack Form, ResponsiveOverlay)
+│   │   ├── shorten-dialog-content.tsx # Shell-agnostic form content for ShortenDialog
 │   │   ├── link-result.tsx          # Signature terminal result band for a created link
-│   │   ├── link-card.tsx           # Single link row in dashboard list
+│   │   ├── link-card.tsx           # Single link row in dashboard list (favicon + overflow menu)
 │   │   ├── qr-preview.tsx          # QR code display + download button
 │   │   ├── ad-toggle.tsx           # Per-link ad mode switch (optimistic UI)
 │   │   └── interstitial-page.tsx   # Ad page layout (shown on /go/$slug)
@@ -224,9 +229,10 @@ export const createLink = createServerFn({ method: "POST" })
 | `getLinkBySlug` | links.ts | Looks up a link by slug — used in $slug.tsx and go.$slug.tsx loaders |
 | `deleteLink` | links.ts | Deletes a link owned by the current user |
 | `toggleAdMode` | links.ts | Flips `adEnabled` boolean for a link |
-| `trackClick` | analytics.ts | Inserts a click event (fire-and-forget, called from redirect/go routes) |
+| `trackClick` | analytics.ts | Inserts a click event + atomically increments counter via `db.batch` (fire-and-forget, called from redirect/go routes) |
 | `getLinkStats` | analytics.ts | Returns click count for a link |
-| `getSession` | auth.ts | Wraps Better Auth session check for use in loaders |
+
+> **Session access:** There is no `getSession` server function — the TanStack Start Vite plugin does not register server functions unreachable from the client route graph. Route loaders and server functions get the session via the plain module helper `getCurrentSession()` in `~/server/auth/session.ts`.
 
 ---
 
@@ -262,7 +268,7 @@ Managed by Better Auth. Config lives in two files:
 
 **Rules:**
 - Never expose DB credentials on the client side.
-- Use `getSession` server function in route loaders to get the current user.
+- Use the plain helper `getCurrentSession()` from `~/server/auth/session.ts` in route loaders and server functions to get the current user (never a `getSession` server function — see §5 note).
 - Protect `/dashboard` by checking session in the loader and redirecting to `/` if unauthenticated.
 
 ---
@@ -334,6 +340,24 @@ import { Dialog } from "@radix-ui/react-dialog";
 All component customization happens inside `components/ui/*.tsx`. Do not override styles at the usage site.
 
 **Responsive overlays:** All modal surfaces must render through `~/components/ui/responsive-overlay` (Drawer <768px / Dialog ≥768px) — never compose Drawer/Dialog pairs ad hoc.
+
+**Links and images — no native elements:**
+```tsx
+// CORRECT — internal routes via type-safe Link, external URLs also via Link
+import { Link } from "@tanstack/react-router";
+<Link to="/$slug" params={{ slug }}>...</Link>       // internal route
+<Link to="https://example.com">...</Link>            // external (renders plain anchor)
+
+// CORRECT — images via unpic
+import { Image } from "@unpic/react";
+<Image src={...} width={40} height={40} />           // width/height required
+
+// WRONG
+<a href="/dashboard">Dashboard</a>
+<img src={...} />
+```
+
+**Neon HTTP driver — no transactions:** `src/server/db/index.ts` uses `drizzle-orm/neon-http`, which does NOT support `db.transaction()`. Use `db.batch([stmtA, stmtB])` instead — the driver executes batched statements as a single server-side atomic transaction over one HTTP round-trip.
 
 ```ts
 // CORRECT — edit the component
@@ -544,9 +568,9 @@ Quick reference: which file is used where.
 |---|---|
 | `~/server/db/index.ts` | All server functions |
 | `~/server/db/schema.ts` | `db/index.ts`, `drizzle.config.ts`, migrations |
+| `~/server/auth/session.ts` | Route loaders and all server functions needing the session |
 | `~/server/functions/links.ts` | `routes/index.tsx`, `routes/dashboard.tsx`, `routes/$slug.tsx`, `routes/go.$slug.tsx` |
 | `~/server/functions/analytics.ts` | `routes/$slug.tsx`, `routes/go.$slug.tsx` |
-| `~/server/functions/auth.ts` | `routes/dashboard.tsx`, `routes/__root.tsx` |
 | `~/lib/auth.ts` | `routes/__root.tsx`, any component needing `signIn`/`signOut` |
 | `~/lib/auth-server.ts` | `routes/api/auth/$.ts`, server functions needing session |
 | `~/lib/qr.ts` | `server/functions/links.ts` (createLink) |
@@ -555,7 +579,9 @@ Quick reference: which file is used where.
 | `~/lib/schema` | `components/shorten-dialog.tsx`, any module needing schemas/types |
 | `~/hooks/use-mobile.tsx` | `components/ui/responsive-overlay.tsx` |
 | `~/components/ui/*` | Feature components |
-| `~/components/ui/responsive-overlay.tsx` | `shorten-dialog.tsx`, `auth-modal.tsx` |
+| `~/components/ui/responsive-overlay.tsx` | `shorten-dialog.tsx`, `auth-modal.tsx`, `link-card.tsx` (QR overlay) |
+| `~/components/ui/alert-dialog.tsx` | `link-card.tsx` (delete confirmation) |
+| `~/components/ui/popover.tsx` | `link-card.tsx` (mobile overflow menu) |
 | `~/components/oauth-buttons.tsx` | `auth-modal.tsx`, `shorten-trigger.tsx` |
 | `~/components/shorten-trigger.tsx` | `routes/index.tsx` |
 | `~/components/shorten-dialog.tsx` | `routes/index.tsx` (via shorten-trigger), `routes/dashboard.tsx` |
