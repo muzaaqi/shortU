@@ -153,6 +153,7 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
               <Link
                 to="/$slug"
                 params={{ slug: link.slug }}
+                preload={false}
                 target="_blank"
                 rel="noreferrer"
                 className="truncate font-mono text-sm font-semibold text-foreground hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"

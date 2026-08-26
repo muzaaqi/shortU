@@ -81,6 +81,7 @@ export const LinkResult = memo(function LinkResult({
             </div>
             <Link
               to={result.shortUrl as string}
+              preload={false}
               target="_blank"
               rel="noreferrer"
               title="Test short URL"

@@ -10,7 +10,7 @@ import { trackClick } from "~/server/functions/analytics";
 import { getLinkBySlug } from "~/server/functions/links";
 
 export const Route = createFileRoute("/go/$slug")({
-  loader: async ({ params }) => {
+  loader: async ({ params, cause }) => {
     const slug = params.slug;
     const link = await getLinkBySlug({ data: { slug } });
 
@@ -20,10 +20,13 @@ export const Route = createFileRoute("/go/$slug")({
       });
     }
 
-    // Fire-and-forget click telemetry
-    trackClick({ data: { linkId: link.id } }).catch(() => {
-      // ignore telemetry errors
-    });
+    // Fire-and-forget click telemetry. Skipped on hover/intent prefetches
+    // (cause === "preload") so phantom loader runs never inflate the counter.
+    if (cause !== "preload") {
+      trackClick({ data: { linkId: link.id } }).catch(() => {
+        // ignore telemetry errors
+      });
+    }
 
     return { link };
   },

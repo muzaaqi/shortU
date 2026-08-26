@@ -9,7 +9,7 @@ import { trackClick } from "~/server/functions/analytics";
 import { getLinkBySlug } from "~/server/functions/links";
 
 export const Route = createFileRoute("/$slug")({
-  loader: async ({ params }) => {
+  loader: async ({ params, cause }) => {
     const slug = params.slug;
     const link = await getLinkBySlug({ data: { slug } });
 
@@ -26,10 +26,14 @@ export const Route = createFileRoute("/$slug")({
       });
     }
 
-    // Fire-and-forget click telemetry for direct 301 redirection
-    trackClick({ data: { linkId: link.id } }).catch(() => {
-      // ignore telemetry errors
-    });
+    // Fire-and-forget click telemetry for direct 301 redirection.
+    // Skipped on hover/intent prefetches (cause === "preload") so phantom
+    // loader runs never inflate the click counter — only real navigations count.
+    if (cause !== "preload") {
+      trackClick({ data: { linkId: link.id } }).catch(() => {
+        // ignore telemetry errors
+      });
+    }
 
     // Direct HTTP 301 redirect
     throw redirect({
