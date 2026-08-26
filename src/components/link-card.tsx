@@ -1,32 +1,36 @@
 /**
  * Single link card row in the dashboard list.
- * Displays short slug, destination URL, click counter, QR download, and delete mutation.
+ * Left segment: destination favicon, short URL + copy + click count,
+ * destination URL beneath. Right segment: QR / ad toggle / delete inline on
+ * desktop, collapsed into a 3-dot popover menu below desktop width.
+ * QR preview opens in a ResponsiveOverlay (Drawer <768px, Dialog ≥768px).
+ * Delete asks confirmation via AlertDialog with a destructive action.
  * Surface Mode: Operate
  * Used by: src/routes/dashboard.tsx
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Check,
-  Copy,
-  ExternalLink,
-  MousePointerClick,
-  QrCode,
-  Trash2,
-} from "lucide-react";
-import { memo, useCallback, useState } from "react";
+import { Image } from "@unpic/react";
+import { Check, Copy, Globe, MoreVertical, MousePointerClick, QrCode, Trash2, Ad } from "lucide-react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { AdToggle } from "~/components/ad-toggle";
 import { QrPreview } from "~/components/qr-preview";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "~/components/ui/item";
-import { formatDate } from "~/lib/utils";
+import { Card } from "~/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { ResponsiveOverlay } from "~/components/ui/responsive-overlay";
+import { cn } from "~/lib/utils";
 import { deleteLink } from "~/server/functions/links";
 
 export interface LinkItem {
@@ -46,12 +50,22 @@ interface LinkCardProps {
 export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
-  const [showQr, setShowQr] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [faviconFailed, setFaviconFailed] = useState(false);
 
   const shortUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/${link.slug}`
-      : `/${link.slug}`;
+    typeof window !== "undefined" ? `${window.location.origin}/${link.slug}` : `/${link.slug}`;
+
+  // Destination hostname drives the favicon source and letter fallback.
+  const domain = useMemo(() => {
+    try {
+      return new URL(link.originalUrl).hostname;
+    } catch {
+      return "";
+    }
+  }, [link.originalUrl]);
 
   const handleCopy = useCallback(() => {
     if (navigator.clipboard?.writeText) {
@@ -70,14 +84,21 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
     setTimeout(() => setCopied(false), 2000);
   }, [shortUrl]);
 
+  const openQr = useCallback(() => {
+    setMenuOpen(false);
+    setQrOpen(true);
+  }, []);
+
+  const askDelete = useCallback(() => {
+    setMenuOpen(false);
+    setConfirmOpen(true);
+  }, []);
+
   const deleteMutation = useMutation({
     mutationFn: () => deleteLink({ data: { id: link.id } }),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["links", "list"] });
-      const previousLinks = queryClient.getQueryData<LinkItem[]>([
-        "links",
-        "list",
-      ]);
+      const previousLinks = queryClient.getQueryData<LinkItem[]>(["links", "list"]);
 
       queryClient.setQueryData<LinkItem[]>(["links", "list"], (old) =>
         old?.filter((item) => item.id !== link.id)
@@ -96,112 +117,201 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
   });
 
   return (
-    <Item
-      variant="outline"
-      className="flex flex-col sm:flex-row sm:items-center gap-4 transition-all duration-150"
-    >
-      <ItemMedia>
-        <div className="flex size-10 items-center justify-center rounded-lg bg-secondary text-foreground font-mono text-xs font-semibold select-none border border-border">
-          /{link.slug.slice(0, 3)}
-        </div>
-      </ItemMedia>
-
-      <ItemContent className="w-full">
-        <div className="flex items-center gap-2 flex-wrap">
-          <ItemTitle className="font-mono text-base text-foreground font-semibold">
-            /{link.slug}
-          </ItemTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopy}
-            className="size-7 text-muted-foreground hover:text-foreground cursor-pointer"
-            title="Copy short link"
-          >
-            {copied ? (
-              <Check className="size-3.5 text-primary" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
-          </Button>
-          <a
-            href={shortUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors p-1"
-            title="Open short link in new tab"
-          >
-            <ExternalLink className="size-3.5" />
-          </a>
-          <Badge variant="secondary" className="gap-1 text-xs font-normal">
-            <MousePointerClick className="size-3" />
-            {link.clickCount} clicks
-          </Badge>
-          {link.adEnabled && (
-            <Badge
-              variant="outline"
-              className="text-[10px] text-brand-amber border-brand-amber/40 font-medium"
-            >
-              Ad Page Active
-            </Badge>
-          )}
-        </div>
-
-        <ItemDescription className="text-xs text-muted-foreground font-mono truncate max-w-md">
-          {link.originalUrl}
-        </ItemDescription>
-
-        <p className="text-[10px] text-muted-foreground">
-          Created {formatDate(link.createdAt)}
-        </p>
-
-        {showQr && link.qrCode && (
-          <div className="mt-3 p-3.5 rounded-lg bg-secondary/30 border border-border w-fit animate-in fade-in slide-in-from-top-1 duration-150">
-            <QrPreview
-              qrCode={link.qrCode}
-              slug={link.slug}
-              size="sm"
-              showDownload={true}
+    <>
+      <Card className="flex-row items-center gap-3 px-3 py-3 transition-colors duration-150 hover:bg-surface-strong sm:px-4">
+        {/* Left segment */}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {faviconFailed || !domain ? (
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary border border-border select-none">
+              <Globe className="size-4 text-muted-foreground" />
+            </div>
+          ) : (
+            <Image
+              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              onError={() => setFaviconFailed(true)}
+              className="size-10 shrink-0 rounded-lg border border-border bg-white object-contain p-1.5 select-none"
             />
+          )}
+
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <a
+                href={shortUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate font-mono text-sm font-semibold text-foreground hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                title={`Open ${shortUrl} in new tab`}
+              >
+                /{link.slug}
+              </a>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={handleCopy}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Copy short link"
+                aria-label={copied ? "Copied" : "Copy short link"}
+              >
+                {copied ? (
+                  <Check className="size-3.5 text-brand-mint" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+              </Button>
+              <Badge
+                variant="secondary"
+                className="shrink-0 tabular-nums"
+                title={`${link.clickCount} clicks`}
+              >
+                <MousePointerClick />
+                <span aria-hidden="true">{link.clickCount}</span>
+                <span className="sr-only">{link.clickCount} clicks</span>
+              </Badge>
+            </div>
+
+            <a
+              href={link.originalUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-0.5 block truncate font-mono text-xs text-muted-foreground hover:text-body transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+              title={link.originalUrl}
+            >
+              {link.originalUrl}
+            </a>
           </div>
-        )}
-      </ItemContent>
-
-      <ItemActions className="w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-border">
-        {link.qrCode && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowQr(!showQr)}
-            className="text-xs gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer h-8"
-          >
-            <QrCode className="size-3.5" />
-            {showQr ? "Hide QR" : "QR Code"}
-          </Button>
-        )}
-
-        <div className="flex items-center gap-2 px-1">
-          <span className="text-xs text-muted-foreground select-none">
-            Ad Mode
-          </span>
-          <AdToggle linkId={link.id} adEnabled={link.adEnabled} />
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={deleteMutation.isPending}
-          onClick={() => {
-            if (confirm(`Delete short link /${link.slug}?`)) {
-              deleteMutation.mutate();
+        {/* Right segment — inline actions on desktop */}
+        <div className="hidden lg:flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2">
+            <span>Ads</span>
+          <AdToggle
+            linkId={link.id}
+            adEnabled={link.adEnabled}
+            className="flex items-center px-1"
+          />
+          </div>
+          {link.qrCode && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={openQr}
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Show QR code"
+              aria-label="Show QR code"
+            >
+              <QrCode className="size-4" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setConfirmOpen(true)}
+            disabled={deleteMutation.isPending}
+            className="text-muted-foreground hover:text-destructive cursor-pointer"
+            title="Delete link"
+            aria-label={`Delete link /${link.slug}`}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+
+        {/* Right segment — 3-dot overflow menu on mobile/tablet */}
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                title="More actions"
+                aria-label="More actions"
+              />
             }
-          }}
-          className="size-8 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-          title="Delete link"
+          >
+            <MoreVertical className="size-4" />
+          </PopoverTrigger>
+          <PopoverContent align="end" sideOffset={8} className="w-48 gap-0 p-1.5">
+            <div className="flex w-full items-center justify-between rounded-md px-2 py-1.5">
+              <div className="flex items-center gap-2.5">
+                <Ad className="size-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">Ads</span>
+              </div>
+              <AdToggle linkId={link.id} adEnabled={link.adEnabled} />
+            </div>
+            {link.qrCode && (
+              <button
+                type="button"
+                onClick={openQr}
+                className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <QrCode className="size-4 text-muted-foreground" />
+                QR code
+              </button>
+            )}
+
+            <div className="mx-1 my-1 h-px bg-border" aria-hidden="true" />
+
+            <button
+              type="button"
+              onClick={askDelete}
+              disabled={deleteMutation.isPending}
+              className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
+            >
+              <Trash2 className="size-4" />
+              Delete
+            </button>
+          </PopoverContent>
+        </Popover>
+      </Card>
+
+      {/* QR code overlay — Drawer on mobile, Dialog on tablet/desktop */}
+      {link.qrCode && (
+        <ResponsiveOverlay
+          open={qrOpen}
+          onOpenChange={setQrOpen}
+          title={`QR code · /${link.slug}`}
+          description={domain}
         >
-          <Trash2 className="size-4" />
-        </Button>
-      </ItemActions>
-    </Item>
+          <div className="flex flex-col items-center gap-3 pb-2">
+            <QrPreview qrCode={link.qrCode} slug={link.slug} size="lg" showDownload={true} />
+          </div>
+        </ResponsiveOverlay>
+      )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <Trash2 />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete /{link.slug}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the short link. Anyone opening{" "}
+              <span className="font-mono">/{link.slug}</span> will no longer reach{" "}
+              <span className="font-mono break-all">{domain}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                setConfirmOpen(false);
+                deleteMutation.mutate();
+              }}
+              className={cn("cursor-pointer")}
+            >
+              Delete link
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 });

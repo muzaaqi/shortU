@@ -167,15 +167,16 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   />
                   {/* Always-available paste affordance, inner-right */}
                   <InputGroupAddon align="inline-end">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={handlePaste}
                       title="Paste from clipboard"
                       aria-label="Paste from clipboard"
                       className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <Clipboard className="size-4" />
-                    </button>
+                    </Button>
                   </InputGroupAddon>
                 </InputGroup>
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -222,7 +223,6 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                 {/* Domain display + regenerate action, inner-right */}
                 <InputGroupAddon
                         align="inline-start"
-                        className="text-muted-foreground"
                       >
                         {slugPrefix}
                       </InputGroupAddon>
@@ -230,11 +230,10 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
                     onClick={handleRegenerate}
                     title="Generate a new random slug"
                     aria-label="Generate a new random slug"
-                    className="-mr-1 cursor-pointer text-muted-foreground hover:text-foreground"
+                    className="cursor-pointer text-muted-foreground hover:text-foreground"
                   >
                     <RefreshCw className="size-3.5" />
                   </Button>
@@ -271,14 +270,14 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
                     <InputGroup className="h-11 bg-card">
                       <InputGroupAddon
                         align="inline-start"
-                        className="pl-3 text-xs text-muted-foreground"
                       >
                         {slugPrefix}
                       </InputGroupAddon>
                       <InputGroupInput
                         id={field.name}
                         name={field.name}
-                        placeholder="my-custom-link"
+                        placeholder="custom-link"
+                        className="pl-0"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value.toLowerCase())}
@@ -343,9 +342,14 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
       {/* Action row — identical in both shells */}
       <div className="mt-5 grid grid-cols-2 gap-2">
         {result ? (
+      <>
           <Button variant="outline" onClick={onClose} className="cursor-pointer">
             Close
           </Button>
+          <Button onClick={handleReset} className="cursor-pointer">
+            Short Antoher
+          </Button>
+      </>
         ) : (
           <>
             <Button variant="outline" type="button" onClick={onClose} className="cursor-pointer">
