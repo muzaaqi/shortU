@@ -229,3 +229,26 @@ export const toggleAdMode = createServerFn({ method: "POST" })
 
     return updated;
   });
+
+/**
+ * Returns aggregate stats for the current authenticated user:
+ * total link count and total accumulated clicks across all their links.
+ * Used by: src/components/user-profile-panel.tsx (stats mini-card)
+ */
+export const getUserStats = createServerFn({ method: "GET" }).handler(async () => {
+  const session = await getCurrentSession();
+  if (!session?.user?.id) {
+    return { linkCount: 0, totalClicks: 0 };
+  }
+
+  const userLinks = await db
+    .select({ clickCount: links.clickCount })
+    .from(links)
+    .where(eq(links.userId, session.user.id));
+
+  const linkCount = userLinks.length;
+  const totalClicks = userLinks.reduce((sum, l) => sum + (l.clickCount ?? 0), 0);
+
+  return { linkCount, totalClicks };
+});
+

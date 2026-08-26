@@ -5,10 +5,8 @@
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-import { Link2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { ThemeToggle } from "~/components/theme-toggle";
-import { UserNav } from "~/components/user-nav";
+import { TopNav } from "~/components/top-nav";
 import appCss from "~/styles.css?url";
 
 /**
@@ -58,26 +56,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootDocument>
-        <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-          <div className="mx-auto flex h-[60px] max-w-5xl items-center justify-between px-4 sm:px-6">
-            <Link to="/" className="flex items-center gap-2 font-semibold text-foreground tracking-tight">
-              <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <Link2 className="size-4" />
-              </div>
-              <span>short<span className="text-primary font-bold">U</span></span>
-            </Link>
-            <nav className="flex items-center gap-3">
-              <Link
-                to="/dashboard"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground inline-flex items-center px-2.5 py-1.5 rounded-lg transition-colors hover:bg-secondary/60 [&.active]:text-foreground [&.active]:font-semibold [&.active]:bg-secondary/80"
-              >
-                Dashboard
-              </Link>
-              <ThemeToggle />
-              <UserNav />
-            </nav>
-          </div>
-        </header>
+        <TopNav />
         <main className="flex-1">
           <Outlet />
         </main>

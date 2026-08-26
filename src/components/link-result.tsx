@@ -4,7 +4,7 @@
  * copy-to-clipboard, and a reset action.
  * Used by: src/components/shorten-dialog.tsx (extracted from former link-form.tsx)
  */
-import { Check, Copy, ExternalLink, RotateCcw } from "lucide-react";
+import { Check, Copy, ExternalLink } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { QrPreview } from "~/components/qr-preview";
@@ -23,13 +23,13 @@ interface LinkResultProps {
   /** Whether to render the live QR preview (defaults to true) */
   includeQr?: boolean;
   /** Resets the flow back to an empty form ("Shorten Another") */
-  onReset: () => void;
+  onReset?: () => void;
 }
 
 export const LinkResult = memo(function LinkResult({
   result,
   includeQr = true,
-  onReset,
+  onReset: _onReset,
 }: LinkResultProps) {
   const [copied, setCopied] = useState(false);
 
