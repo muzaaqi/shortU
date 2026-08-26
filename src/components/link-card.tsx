@@ -9,8 +9,16 @@
  * Used by: src/routes/dashboard.tsx
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Image } from "@unpic/react";
-import { Check, Copy, Globe, MoreVertical, MousePointerClick, QrCode, Trash2, Ad } from "lucide-react";
+import {
+  Ad,
+  Check,
+  Copy,
+  Globe,
+  MoreVertical,
+  MousePointerClick,
+  QrCode,
+  Trash2,
+} from "lucide-react";
 import { memo, useCallback, useMemo, useState } from "react";
 import { AdToggle } from "~/components/ad-toggle";
 import { QrPreview } from "~/components/qr-preview";
@@ -126,11 +134,13 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
               <Globe className="size-4 text-muted-foreground" />
             </div>
           ) : (
-            <Image
+            <img
               src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
               alt=""
               aria-hidden="true"
               loading="lazy"
+              width={40}
+              height={40}
               onError={() => setFaviconFailed(true)}
               className="size-10 shrink-0 rounded-lg border border-border bg-white object-contain p-1.5 select-none"
             />
