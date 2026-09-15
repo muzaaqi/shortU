@@ -1,6 +1,6 @@
 /**
  * Unit tests for ClickSparkline component.
- * Verifies rendering of daily click trend bars.
+ * Verifies rendering of GitHub contribution-style 7-day click trend graph.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it } from "bun:test";
@@ -8,7 +8,7 @@ import { renderToString } from "react-dom/server";
 import { ClickSparkline } from "./click-sparkline";
 
 describe("ClickSparkline Component", () => {
-  it("renders 7-day sparkline bar chart", () => {
+  it("renders 7 horizontal square contribution cells", () => {
     const queryClient = new QueryClient();
     const mockData = [
       { date: "2026-09-09", label: "Wed", count: 0 },
@@ -28,5 +28,7 @@ describe("ClickSparkline Component", () => {
 
     expect(html).toContain("7-day trend");
     expect(html).toContain("2026-09-15");
+    expect(html).toContain("Tue (2026-09-15): 12 clicks");
+    expect(html).toContain("28"); // total sum of clicks
   });
 });

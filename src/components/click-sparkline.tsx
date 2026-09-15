@@ -1,6 +1,6 @@
 /**
- * 7-Day click telemetry sparkline chart.
- * Lightweight, zero-dependency SVG bar chart rendering daily click velocity.
+ * 7-Day click telemetry graph styled like a GitHub contribution heatmap.
+ * Renders 7 horizontal square cells representing daily click activity.
  * Used by: src/components/link-card.tsx
  */
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,37 @@ interface ClickSparklineProps {
   linkId: string;
   className?: string | undefined;
   initialData?: DailyClickPoint[] | undefined;
+}
+
+/**
+ * Maps click count to GitHub contribution heatmap level (0 to 4).
+ */
+function getContributionLevel(count: number, maxCount: number): number {
+  if (count <= 0) return 0;
+  if (maxCount <= 1) return 2;
+  const ratio = count / maxCount;
+  if (ratio <= 0.25) return 1;
+  if (ratio <= 0.5) return 2;
+  if (ratio <= 0.75) return 3;
+  return 4;
+}
+
+/**
+ * Returns Tailwind classNames matching GitHub's iconic contribution color tiers.
+ */
+function getContributionClasses(level: number): string {
+  switch (level) {
+    case 1:
+      return "bg-emerald-500/30 dark:bg-emerald-500/25 border-emerald-500/40 hover:border-emerald-500/60";
+    case 2:
+      return "bg-emerald-500/55 dark:bg-emerald-500/50 border-emerald-500/60 hover:border-emerald-500/80";
+    case 3:
+      return "bg-emerald-500/80 dark:bg-emerald-500/75 border-emerald-500/85 hover:border-emerald-500";
+    case 4:
+      return "bg-emerald-500 dark:bg-emerald-400 border-emerald-600 dark:border-emerald-300 shadow-xs";
+    default:
+      return "bg-muted/70 dark:bg-muted/40 border-border/50 hover:border-border";
+  }
 }
 
 export const ClickSparkline = memo(function ClickSparkline({
@@ -51,29 +82,26 @@ export const ClickSparkline = memo(function ClickSparkline({
       )}
       title={`7-day trend: ${totalRecent} clicks`}
     >
-      <div className="flex items-end gap-1 h-5" role="img" aria-label="7-day click trend graph">
+      <div
+        className="flex items-center gap-1"
+        role="img"
+        aria-label={`7-day click trend graph: ${totalRecent} total clicks`}
+      >
         {points.map((point) => {
-          const heightPercent = point.count > 0 ? Math.max(15, (point.count / maxCount) * 100) : 10;
+          const level = getContributionLevel(point.count, maxCount);
           return (
             <div
               key={point.date}
-              className="flex flex-col items-center justify-end h-full w-2"
-              title={`${point.label} (${point.date}): ${point.count} clicks`}
-            >
-              <div
-                style={{ height: `${heightPercent}%` }}
-                className={cn(
-                  "w-full rounded-xs transition-all duration-200",
-                  point.count > 0
-                    ? "bg-brand-accent hover:opacity-80"
-                    : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
-                )}
-              />
-            </div>
+              className={cn(
+                "size-2.5 sm:size-3 rounded-[2px] border transition-transform duration-150 hover:scale-115 cursor-help",
+                getContributionClasses(level)
+              )}
+              title={`${point.label} (${point.date}): ${point.count} ${point.count === 1 ? "click" : "clicks"}`}
+            />
           );
         })}
       </div>
-      <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+      <span className="font-mono text-[10px] text-muted-foreground tabular-nums ml-0.5">
         {totalRecent} <span className="text-[9px]">7d</span>
       </span>
     </div>
