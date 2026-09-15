@@ -18,33 +18,36 @@ interface ClickSparklineProps {
 }
 
 /**
- * Maps click count to GitHub contribution heatmap level (0 to 4).
+ * Maps click count to foreground intensity level (0 to 5).
  */
 function getContributionLevel(count: number, maxCount: number): number {
   if (count <= 0) return 0;
-  if (maxCount <= 1) return 2;
+  if (maxCount <= 1) return 3;
   const ratio = count / maxCount;
-  if (ratio <= 0.25) return 1;
-  if (ratio <= 0.5) return 2;
-  if (ratio <= 0.75) return 3;
-  return 4;
+  if (ratio <= 0.2) return 1;
+  if (ratio <= 0.4) return 2;
+  if (ratio <= 0.6) return 3;
+  if (ratio <= 0.8) return 4;
+  return 5;
 }
 
 /**
- * Returns Tailwind classNames matching GitHub's iconic contribution color tiers.
+ * Returns Tailwind classNames matching tiered foreground opacities.
  */
 function getContributionClasses(level: number): string {
   switch (level) {
     case 1:
-      return "bg-emerald-500/30 dark:bg-emerald-500/25 border-emerald-500/40 hover:border-emerald-500/60";
+      return "bg-foreground/20 border-foreground/25 hover:border-foreground/40";
     case 2:
-      return "bg-emerald-500/55 dark:bg-emerald-500/50 border-emerald-500/60 hover:border-emerald-500/80";
+      return "bg-foreground/40 border-foreground/45 hover:border-foreground/60";
     case 3:
-      return "bg-emerald-500/80 dark:bg-emerald-500/75 border-emerald-500/85 hover:border-emerald-500";
+      return "bg-foreground/60 border-foreground/65 hover:border-foreground/80";
     case 4:
-      return "bg-emerald-500 dark:bg-emerald-400 border-emerald-600 dark:border-emerald-300 shadow-xs";
+      return "bg-foreground/80 border-foreground/85 hover:border-foreground";
+    case 5:
+      return "bg-foreground border-foreground shadow-xs";
     default:
-      return "bg-muted/70 dark:bg-muted/40 border-border/50 hover:border-border";
+      return "bg-foreground/5 border-foreground/10 hover:border-foreground/25";
   }
 }
 
