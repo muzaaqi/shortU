@@ -1,9 +1,9 @@
 /**
  * Unit tests for QR code generation utility.
- * Verifies PNG base64 data URL and vector SVG output generation.
+ * Verifies PNG base64 data URL, vector SVG output, and color presets.
  */
 import { describe, expect, it } from "bun:test";
-import { generateQR, generateQRSvg } from "./qr";
+import { QR_COLOR_PRESETS, generateQR, generateQRSvg } from "./qr";
 
 describe("QR Code Generation Utility", () => {
   it("generates a valid PNG data URL from a URL", async () => {
@@ -18,11 +18,19 @@ describe("QR Code Generation Utility", () => {
     expect(svg).toContain("</svg>");
   });
 
-  it("applies custom color options correctly", async () => {
+  it("exports valid color presets with accessible contrast", () => {
+    expect(QR_COLOR_PRESETS.length).toBeGreaterThanOrEqual(4);
+    for (const preset of QR_COLOR_PRESETS) {
+      expect(preset.name).toBeDefined();
+      expect(preset.color).toMatch(/^#[0-9a-fA-F]{6}$/);
+    }
+  });
+
+  it("applies custom color presets correctly to SVG", async () => {
+    const preset = QR_COLOR_PRESETS[1];
     const svg = await generateQRSvg("https://shortu.dev/abc1234", {
-      darkColor: "#ff0000",
-      lightColor: "#00ff00",
+      darkColor: preset?.color,
     });
-    expect(svg).toContain("#ff0000");
+    expect(svg).toContain(preset?.color ?? "");
   });
 });

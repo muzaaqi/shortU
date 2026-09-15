@@ -1,13 +1,13 @@
 /**
  * QR Code preview and download component.
- * Displays high-contrast scan-ready QR code with on-demand client rendering
- * and PNG/SVG download buttons.
+ * Displays high-contrast scan-ready QR code with on-demand client rendering,
+ * color preset customization studio, and PNG/SVG download buttons.
  * Used by: src/components/link-result.tsx, src/components/link-card.tsx
  */
-import { Download, Loader2 } from "lucide-react";
+import { Check, Download, Loader2, Palette } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { generateQR, generateQRSvg } from "~/lib/qr";
+import { QR_COLOR_PRESETS, generateQR, generateQRSvg } from "~/lib/qr";
 import { cn } from "~/lib/utils";
 
 interface QrPreviewProps {
@@ -19,6 +19,7 @@ interface QrPreviewProps {
   className?: string | undefined;
   size?: ("sm" | "md" | "lg") | undefined;
   showDownload?: boolean | undefined;
+  showColorPicker?: boolean | undefined;
 }
 
 export const QrPreview = memo(function QrPreview({
@@ -28,12 +29,14 @@ export const QrPreview = memo(function QrPreview({
   className,
   size = "md",
   showDownload = true,
+  showColorPicker = true,
 }: QrPreviewProps) {
+  const [selectedColor, setSelectedColor] = useState(QR_COLOR_PRESETS[0]?.color ?? "#0f172a");
   const [dataUrl, setDataUrl] = useState<string | null>(initialQrCode || null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (initialQrCode) {
+    if (initialQrCode && !url) {
       setDataUrl(initialQrCode);
       return;
     }
@@ -43,7 +46,7 @@ export const QrPreview = memo(function QrPreview({
     let cancelled = false;
     setLoading(true);
 
-    generateQR(url)
+    generateQR(url, { darkColor: selectedColor })
       .then((generated) => {
         if (!cancelled) {
           setDataUrl(generated);
@@ -59,7 +62,7 @@ export const QrPreview = memo(function QrPreview({
     return () => {
       cancelled = true;
     };
-  }, [url, initialQrCode]);
+  }, [url, initialQrCode, selectedColor]);
 
   const handleDownloadPng = useCallback(() => {
     if (!dataUrl) return;
@@ -72,10 +75,10 @@ export const QrPreview = memo(function QrPreview({
   }, [dataUrl, slug]);
 
   const handleDownloadSvg = useCallback(async () => {
-    const targetUrl = url || dataUrl;
+    const targetUrl = url;
     if (!targetUrl) return;
 
-    const svgContent = await generateQRSvg(url || "");
+    const svgContent = await generateQRSvg(targetUrl, { darkColor: selectedColor });
     const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -85,7 +88,7 @@ export const QrPreview = memo(function QrPreview({
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(blobUrl);
-  }, [url, dataUrl, slug]);
+  }, [url, selectedColor, slug]);
 
   const sizeClasses = {
     sm: "size-24",
@@ -94,7 +97,7 @@ export const QrPreview = memo(function QrPreview({
   }[size];
 
   return (
-    <div className={cn("flex flex-col items-center gap-2", className)}>
+    <div className={cn("flex flex-col items-center gap-3", className)}>
       <div className="flex items-center justify-center rounded-lg bg-white p-2.5 shadow-sm border border-border">
         {loading || !dataUrl ? (
           <div className={cn(sizeClasses, "flex items-center justify-center bg-muted/40 rounded")}>
@@ -108,8 +111,43 @@ export const QrPreview = memo(function QrPreview({
           />
         )}
       </div>
+
+      {/* Color theme swatches */}
+      {showColorPicker && url && (
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
+            <Palette className="size-3" />
+            <span>Theme:</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {QR_COLOR_PRESETS.map((preset) => {
+              const isSelected = selectedColor === preset.color;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => setSelectedColor(preset.color)}
+                  className={cn(
+                    "size-5 rounded-full border border-border/80 transition-transform duration-150 flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    isSelected
+                      ? "scale-110 ring-2 ring-brand-accent ring-offset-1"
+                      : "hover:scale-105 opacity-80 hover:opacity-100"
+                  )}
+                  style={{ backgroundColor: preset.color }}
+                  title={preset.name}
+                  aria-label={preset.name}
+                  aria-pressed={isSelected}
+                >
+                  {isSelected && <Check className="size-3 text-white stroke-[3]" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {showDownload && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 pt-0.5">
           <Button
             variant="outline"
             size="xs"
