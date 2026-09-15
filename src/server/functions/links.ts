@@ -12,6 +12,11 @@ import { generateQR } from "~/lib/qr";
 import { deepValidateUrl } from "~/lib/schema";
 import { generateSlug, validateSlug } from "~/lib/slugify";
 import { normalizeInputUrl } from "~/lib/utils";
+import {
+  getCachedLink,
+  invalidateCachedLink,
+  setCachedLink,
+} from "~/server/cache/slug-cache";
 import { getCurrentSession } from "~/server/auth/session";
 import { db } from "~/server/db";
 import { links } from "~/server/db/schema";
@@ -144,6 +149,11 @@ export const createLink = createServerFn({ method: "POST" })
       })
       .returning();
 
+    // Warm cache with newly created link
+    if (newLink) {
+      setCachedLink(slug, newLink);
+    }
+
     return {
       ...newLink,
       shortUrl,
@@ -152,6 +162,7 @@ export const createLink = createServerFn({ method: "POST" })
 
 /**
  * Looks up a shortened link by its slug.
+ * Checks fast in-memory cache first to avoid Neon cold starts and latency on hot paths.
  * Used by: src/routes/$slug.tsx, src/routes/go.$slug.tsx
  */
 export const getLinkBySlug = createServerFn({ method: "GET" })
@@ -160,12 +171,19 @@ export const getLinkBySlug = createServerFn({ method: "GET" })
     return data;
   })
   .handler(async ({ data }) => {
+    const cached = getCachedLink(data.slug);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const [link] = await db
       .select()
       .from(links)
       .where(eq(links.slug, data.slug));
 
-    return link || null;
+    const result = link || null;
+    setCachedLink(data.slug, result);
+    return result;
   });
 
 /**
@@ -189,6 +207,7 @@ export const getLinks = createServerFn({ method: "GET" }).handler(async () => {
 
 /**
  * Deletes a link owned by the current authenticated user.
+ * Invalidates the slug from cache.
  * Used by: src/components/link-card.tsx
  */
 export const deleteLink = createServerFn({ method: "POST" })
@@ -211,11 +230,14 @@ export const deleteLink = createServerFn({ method: "POST" })
       throw new Error("Link not found or unauthorized.");
     }
 
+    invalidateCachedLink(deleted.slug);
+
     return { success: true, id: deleted.id };
   });
 
 /**
  * Toggles the interstitial adEnabled mode for a user's link.
+ * Updates cached link representation immediately.
  * Used by: src/components/ad-toggle.tsx
  */
 export const toggleAdMode = createServerFn({ method: "POST" })
@@ -238,6 +260,8 @@ export const toggleAdMode = createServerFn({ method: "POST" })
     if (!updated) {
       throw new Error("Link not found or unauthorized.");
     }
+
+    setCachedLink(updated.slug, updated);
 
     return updated;
   });
