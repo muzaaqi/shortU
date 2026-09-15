@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { memo, useCallback, useMemo, useState } from "react";
 import { AdToggle } from "~/components/ad-toggle";
+import { ClickSparkline } from "~/components/click-sparkline";
 import { QrPreview } from "~/components/qr-preview";
 import {
   AlertDialog,
@@ -184,6 +185,7 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
                 <span aria-hidden="true">{link.clickCount}</span>
                 <span className="sr-only">{link.clickCount} clicks</span>
               </Badge>
+              <ClickSparkline linkId={link.id} className="hidden sm:inline-flex" />
             </div>
 
             <Link

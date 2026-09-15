@@ -4,18 +4,59 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "~/server/db";
 import { clicks, links } from "~/server/db/schema";
 
 export interface TrackClickInput {
   linkId: string;
-  userAgent?: string;
+  userAgent?: string | undefined;
 }
 
 export interface GetLinkStatsInput {
   linkId: string;
+}
+
+export interface DailyClickPoint {
+  date: string;
+  label: string;
+  count: number;
+}
+
+/**
+ * Aggregates raw click events into a continuous daily time series.
+ * Driver-agnostic in-memory bucketing.
+ */
+export function aggregateDailyClicks(
+  rawClicks: { clickedAt: Date | string }[],
+  days: number = 7,
+  baseDate: Date = new Date()
+): DailyClickPoint[] {
+  const result: DailyClickPoint[] = [];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(baseDate);
+    d.setUTCDate(d.getUTCDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const dayLabel = dayNames[d.getUTCDay()] ?? "";
+    result.push({
+      date: dateStr,
+      label: dayLabel,
+      count: 0,
+    });
+  }
+
+  for (const click of rawClicks) {
+    const clickDate = new Date(click.clickedAt).toISOString().slice(0, 10);
+    const entry = result.find((item) => item.date === clickDate);
+    if (entry) {
+      entry.count += 1;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -101,5 +142,34 @@ export const getLinkStats = createServerFn({ method: "GET" })
     } catch (error) {
       console.error("Failed to fetch link stats:", error);
       return { link: null, recentClicks: [] };
+    }
+  });
+
+/**
+ * Retrieves daily click counts for a link over the past 7 days.
+ * Returns structured array for sparkline rendering.
+ * Used by: src/components/click-sparkline.tsx, src/components/link-card.tsx
+ */
+export const getLinkDailyClicks = createServerFn({ method: "GET" })
+  .validator((data: { linkId: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const linkClicks = await db
+        .select({ clickedAt: clicks.clickedAt })
+        .from(clicks)
+        .where(
+          and(
+            eq(clicks.linkId, data.linkId),
+            gte(clicks.clickedAt, sevenDaysAgo)
+          )
+        );
+
+      return aggregateDailyClicks(linkClicks, 7, now);
+    } catch (error) {
+      console.error("Failed to fetch daily clicks:", error);
+      return aggregateDailyClicks([], 7);
     }
   });
