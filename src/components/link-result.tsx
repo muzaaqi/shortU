@@ -4,11 +4,12 @@
  * copy-to-clipboard, and a reset action.
  * Used by: src/components/shorten-dialog.tsx (extracted from former link-form.tsx)
  */
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink, Share2 } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { QrPreview } from "~/components/qr-preview";
 import { Link } from "@tanstack/react-router";
+import { canUseWebShare, copyToClipboard, shareOrCopy } from "~/lib/share";
 
 export interface LinkResultData {
   slug: string;
@@ -32,28 +33,34 @@ export const LinkResult = memo(function LinkResult({
   onReset: _onReset,
 }: LinkResultProps) {
   const [copied, setCopied] = useState(false);
+  const isShareSupported = canUseWebShare();
 
   /**
    * Copies the short URL via async clipboard API with a textarea fallback
    * for restricted-permission browsers, then flashes the success state.
    * Used by: Copy Short Link button
    */
-  const handleCopy = useCallback(() => {
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(result.shortUrl);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = result.shortUrl;
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-    }
+  const handleCopy = useCallback(async () => {
+    await copyToClipboard(result.shortUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [result.shortUrl]);
+
+  /**
+   * Triggers native Web Share API or falls back to clipboard copy.
+   * Used by: Share Link button
+   */
+  const handleShare = useCallback(async () => {
+    const res = await shareOrCopy({
+      url: result.shortUrl,
+      title: `shortU — /${result.slug}`,
+      text: `Short link for ${result.originalUrl}`,
+    });
+    if (res.copied) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [result.shortUrl, result.slug, result.originalUrl]);
 
   return (
     <div className="space-y-4">
@@ -94,12 +101,42 @@ export const LinkResult = memo(function LinkResult({
             To: {result.originalUrl.substring(0, 30)}...
           </p>
         </div>
-
       </div>
+
+      {isShareSupported ? (
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={handleCopy}
+            variant="outline"
+            size="lg"
+            className="w-full cursor-pointer"
+          >
+            {copied ? (
+              <>
+                <Check className="size-4 text-brand-mint" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="size-4" />
+                Copy
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleShare}
+            size="lg"
+            className="w-full cursor-pointer"
+          >
+            <Share2 className="size-4" />
+            Share Link
+          </Button>
+        </div>
+      ) : (
         <Button
           onClick={handleCopy}
           size="lg"
-          className="w-full"
+          className="w-full cursor-pointer"
         >
           {copied ? (
             <>
@@ -113,6 +150,7 @@ export const LinkResult = memo(function LinkResult({
             </>
           )}
         </Button>
+      )}
     </div>
   );
 });

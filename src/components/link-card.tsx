@@ -19,6 +19,7 @@ import {
   MoreVertical,
   MousePointerClick,
   QrCode,
+  Share2,
   Trash2,
 } from "lucide-react";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -41,6 +42,7 @@ import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { ResponsiveOverlay } from "~/components/ui/responsive-overlay";
+import { copyToClipboard, shareOrCopy } from "~/lib/share";
 import { cn } from "~/lib/utils";
 import { deleteLink } from "~/server/functions/links";
 
@@ -78,22 +80,24 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
     }
   }, [link.originalUrl]);
 
-  const handleCopy = useCallback(() => {
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(shortUrl);
-    } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = shortUrl;
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-    }
+  const handleCopy = useCallback(async () => {
+    await copyToClipboard(shortUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [shortUrl]);
+
+  const handleShare = useCallback(async () => {
+    setMenuOpen(false);
+    const res = await shareOrCopy({
+      url: shortUrl,
+      title: `shortU — /${link.slug}`,
+      text: `Short link for ${link.originalUrl}`,
+    });
+    if (res.copied) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [shortUrl, link.slug, link.originalUrl]);
 
   const openQr = useCallback(() => {
     setMenuOpen(false);
@@ -213,6 +217,16 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
           <Button
             variant="ghost"
             size="icon-sm"
+            onClick={handleShare}
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            title="Share link"
+            aria-label={`Share link /${link.slug}`}
+          >
+            <Share2 className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={openQr}
             className="text-muted-foreground hover:text-foreground cursor-pointer"
             title="Show QR code"
@@ -256,6 +270,14 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
               </div>
               <AdToggle linkId={link.id} adEnabled={link.adEnabled} />
             </div>
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Share2 className="size-4 text-muted-foreground" />
+              Share
+            </button>
             <button
               type="button"
               onClick={openQr}
