@@ -11,7 +11,7 @@
  */
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Clipboard, Lock, RefreshCw } from "lucide-react";
+import { ChevronDown, Clipboard, Lock, RefreshCw, Tags } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { AuthModal } from "~/components/auth-modal";
 import { LinkResult, type LinkResultData } from "~/components/link-result";
@@ -36,7 +36,8 @@ import { useClipboardPaste } from "~/hooks/use-clipboard-paste";
 import { useSession } from "~/lib/auth";
 import { generateSlug } from "~/lib/slugify";
 import { shortenFormSchema, type ShortenFormValues } from "~/lib/schema";
-import { normalizeInputUrl, slugPrefixFromOrigin } from "~/lib/utils";
+import { buildUtmUrl, hasUtmParams } from "~/lib/utm";
+import { cn, normalizeInputUrl, slugPrefixFromOrigin } from "~/lib/utils";
 import { createLink, getAppOrigin } from "~/server/functions/links";
 
 /** Query key for the app origin (moved here from the retired link-form.tsx) */
@@ -63,6 +64,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
   const [includeQr, setIncludeQr] = useState(true);
   const [result, setResult] = useState<LinkResultData | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUtmBuilder, setShowUtmBuilder] = useState(false);
 
   const { data: appOrigin } = useQuery({
     queryKey: APP_ORIGIN_KEY,
@@ -77,8 +79,18 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
 
   const mutation = useMutation({
     mutationFn: async (values: ShortenFormValues) => {
-      const normalized = normalizeInputUrl(values.url);
+      let normalized = normalizeInputUrl(values.url);
       if (!normalized) throw new Error("Please enter a valid destination URL.");
+
+      // If UTM parameters are present, attach them to the destination URL
+      normalized = buildUtmUrl(normalized, {
+        utmSource: values.utmSource,
+        utmMedium: values.utmMedium,
+        utmCampaign: values.utmCampaign,
+        utmTerm: values.utmTerm,
+        utmContent: values.utmContent,
+      });
+
       return createLink({
         data: {
           originalUrl: normalized,
@@ -107,6 +119,11 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
       customSlug: "",
       expiresIn: "never",
       maxClicks: undefined,
+      utmSource: "",
+      utmMedium: "",
+      utmCampaign: "",
+      utmTerm: "",
+      utmContent: "",
     } as ShortenFormValues,
     validators: {
       onSubmit: shortenFormSchema,
@@ -185,6 +202,134 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
             );
           }}
         </form.Field>
+
+        {/* UTM Campaign Tracking Accordion */}
+        <div className="rounded-md border border-border/70 bg-secondary/30 p-2.5">
+          <button
+            type="button"
+            onClick={() => setShowUtmBuilder((prev) => !prev)}
+            className="flex w-full items-center justify-between text-left text-xs font-medium text-foreground hover:text-brand-accent transition-colors cursor-pointer select-none"
+            aria-expanded={showUtmBuilder}
+          >
+            <span className="flex items-center gap-1.5 font-semibold">
+              <Tags className="size-3.5 text-brand-accent" />
+              UTM Campaign Tracking
+              {hasUtmParams({
+                utmSource: form.getFieldValue("utmSource"),
+                utmMedium: form.getFieldValue("utmMedium"),
+                utmCampaign: form.getFieldValue("utmCampaign"),
+                utmTerm: form.getFieldValue("utmTerm"),
+                utmContent: form.getFieldValue("utmContent"),
+              }) && (
+                <span className="ml-1 rounded-full bg-brand-accent/20 text-brand-accent px-1.5 py-0.5 text-[10px] font-bold">
+                  Active
+                </span>
+              )}
+            </span>
+            <span className="text-muted-foreground text-[11px] flex items-center gap-1">
+              {showUtmBuilder ? "Hide" : "Add UTMs"}
+              <ChevronDown className={cn("size-3.5 transition-transform duration-200", showUtmBuilder && "rotate-180")} />
+            </span>
+          </button>
+
+          {showUtmBuilder && (
+            <div className="mt-3 space-y-2.5 pt-2 border-t border-border/50 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <form.Field name="utmSource">
+                  {(field) => (
+                    <div>
+                      <label htmlFor="utm-source" className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Campaign Source
+                      </label>
+                      <input
+                        id="utm-source"
+                        name="utm-source"
+                        placeholder="e.g. google, twitter, newsletter"
+                        value={field.state.value ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="w-full h-8 rounded-sm border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                  )}
+                </form.Field>
+
+                <form.Field name="utmMedium">
+                  {(field) => (
+                    <div>
+                      <label htmlFor="utm-medium" className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Campaign Medium
+                      </label>
+                      <input
+                        id="utm-medium"
+                        name="utm-medium"
+                        placeholder="e.g. cpc, social, email"
+                        value={field.state.value ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="w-full h-8 rounded-sm border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                  )}
+                </form.Field>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <form.Field name="utmCampaign">
+                  {(field) => (
+                    <div>
+                      <label htmlFor="utm-campaign" className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Campaign Name
+                      </label>
+                      <input
+                        id="utm-campaign"
+                        name="utm-campaign"
+                        placeholder="e.g. summer_launch"
+                        value={field.state.value ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="w-full h-8 rounded-sm border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                  )}
+                </form.Field>
+
+                <form.Field name="utmTerm">
+                  {(field) => (
+                    <div>
+                      <label htmlFor="utm-term" className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Campaign Term
+                      </label>
+                      <input
+                        id="utm-term"
+                        name="utm-term"
+                        placeholder="e.g. running+shoes"
+                        value={field.state.value ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="w-full h-8 rounded-sm border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                  )}
+                </form.Field>
+
+                <form.Field name="utmContent">
+                  {(field) => (
+                    <div>
+                      <label htmlFor="utm-content" className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Campaign Content
+                      </label>
+                      <input
+                        id="utm-content"
+                        name="utm-content"
+                        placeholder="e.g. hero_cta"
+                        value={field.state.value ?? ""}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="w-full h-8 rounded-sm border border-border bg-card px-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                    </div>
+                  )}
+                </form.Field>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Slug fields — the Custom slug switch sits left of each input label */}
         <div className="text-left">

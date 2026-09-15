@@ -207,6 +207,12 @@ export const shortenFormSchema = z.object({
     .positive("Max clicks must be greater than 0")
     .max(1000000, "Max clicks cannot exceed 1,000,000")
     .optional(),
+
+  utmSource: z.string().max(100).optional(),
+  utmMedium: z.string().max(100).optional(),
+  utmCampaign: z.string().max(100).optional(),
+  utmTerm: z.string().max(100).optional(),
+  utmContent: z.string().max(100).optional(),
 });
 
 /** Inferred form values type — the only shape ShortenDialog's form handles. */
