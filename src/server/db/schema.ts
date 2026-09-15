@@ -79,7 +79,6 @@ export const links = pgTable(
     userId: text("user_id").references(() => users.id, { onDelete: "set null" }), // null = anonymous
     slug: text("slug").notNull().unique(),
     originalUrl: text("original_url").notNull(),
-    qrCode: text("qr_code"), // base64 data URL, set at creation
     adEnabled: boolean("ad_enabled").notNull().default(false),
     clickCount: integer("click_count").notNull().default(0),
     createdAt: timestamp("created_at").notNull(),

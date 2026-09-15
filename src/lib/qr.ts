@@ -1,21 +1,43 @@
 /**
  * QR code generation utility.
- * Always called server-side inside createLink server function.
- * Used by: src/server/functions/links.ts
+ * Generates PNG data URLs and vector SVG strings on-demand.
+ * Can be safely called on client or server.
+ * Used by: src/components/qr-preview.tsx, src/server/functions/links.ts
  */
 import QRCode from "qrcode";
 
+export interface QROptions {
+  width?: number;
+  margin?: number;
+  darkColor?: string;
+  lightColor?: string;
+}
+
 /**
- * Generates a QR code from a URL.
- * Returns a base64-encoded PNG data URL suitable for <img src={...} />.
+ * Generates a base64-encoded PNG data URL from a URL string.
  */
-export async function generateQR(url: string): Promise<string> {
+export async function generateQR(url: string, options?: QROptions): Promise<string> {
   return QRCode.toDataURL(url, {
-    width: 300,
-    margin: 2,
+    width: options?.width ?? 300,
+    margin: options?.margin ?? 2,
     color: {
-      dark: "#000000",
-      light: "#ffffff",
+      dark: options?.darkColor ?? "#000000",
+      light: options?.lightColor ?? "#ffffff",
+    },
+  });
+}
+
+/**
+ * Generates an SVG string from a URL string.
+ */
+export async function generateQRSvg(url: string, options?: QROptions): Promise<string> {
+  return QRCode.toString(url, {
+    type: "svg",
+    width: options?.width ?? 300,
+    margin: options?.margin ?? 2,
+    color: {
+      dark: options?.darkColor ?? "#000000",
+      light: options?.lightColor ?? "#ffffff",
     },
   });
 }

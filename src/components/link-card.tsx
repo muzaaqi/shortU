@@ -47,7 +47,7 @@ export interface LinkItem {
   id: string;
   slug: string;
   originalUrl: string;
-  qrCode: string | null;
+  qrCode?: string | null | undefined;
   adEnabled: boolean;
   clickCount: number;
   createdAt: Date | string;
@@ -208,18 +208,16 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
             className="flex items-center px-1"
           />
           </div>
-          {link.qrCode && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={openQr}
-              className="text-muted-foreground hover:text-foreground cursor-pointer"
-              title="Show QR code"
-              aria-label="Show QR code"
-            >
-              <QrCode className="size-4" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={openQr}
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            title="Show QR code"
+            aria-label="Show QR code"
+          >
+            <QrCode className="size-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -256,16 +254,14 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
               </div>
               <AdToggle linkId={link.id} adEnabled={link.adEnabled} />
             </div>
-            {link.qrCode && (
-              <button
-                type="button"
-                onClick={openQr}
-                className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <QrCode className="size-4 text-muted-foreground" />
-                QR code
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={openQr}
+              className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-foreground hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <QrCode className="size-4 text-muted-foreground" />
+              QR code
+            </button>
 
             <div className="mx-1 my-1 h-px bg-border" aria-hidden="true" />
 
@@ -283,18 +279,22 @@ export const LinkCard = memo(function LinkCard({ link }: LinkCardProps) {
       </Card>
 
       {/* QR code overlay — Drawer on mobile, Dialog on tablet/desktop */}
-      {link.qrCode && (
-        <ResponsiveOverlay
-          open={qrOpen}
-          onOpenChange={setQrOpen}
-          title={`QR code · /${link.slug}`}
-          description={domain}
-        >
-          <div className="flex flex-col items-center gap-3 pb-2">
-            <QrPreview qrCode={link.qrCode} slug={link.slug} size="lg" showDownload={true} />
-          </div>
-        </ResponsiveOverlay>
-      )}
+      <ResponsiveOverlay
+        open={qrOpen}
+        onOpenChange={setQrOpen}
+        title={`QR code · /${link.slug}`}
+        description={domain}
+      >
+        <div className="flex flex-col items-center gap-3 pb-2">
+          <QrPreview
+            url={shortUrl}
+            qrCode={link.qrCode}
+            slug={link.slug}
+            size="lg"
+            showDownload={true}
+          />
+        </div>
+      </ResponsiveOverlay>
 
       {/* Delete confirmation */}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>

@@ -8,7 +8,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { generateQR } from "~/lib/qr";
 import { deepValidateUrl } from "~/lib/schema";
 import { generateSlug, validateSlug } from "~/lib/slugify";
 import { normalizeInputUrl } from "~/lib/utils";
@@ -129,7 +128,6 @@ export const createLink = createServerFn({ method: "POST" })
     const origin = await resolveOrigin();
 
     const shortUrl = `${origin}/${slug}`;
-    const qrCode = await generateQR(shortUrl);
 
     const id = nanoid();
     const now = new Date();
@@ -141,7 +139,6 @@ export const createLink = createServerFn({ method: "POST" })
         userId,
         slug,
         originalUrl: data.originalUrl,
-        qrCode,
         adEnabled: data.adEnabled,
         clickCount: 0,
         createdAt: now,

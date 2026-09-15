@@ -93,7 +93,6 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
         slug: data.slug ?? "",
         originalUrl: data.originalUrl ?? "",
         shortUrl: data.shortUrl ?? "",
-        qrCode: data.qrCode ?? null,
       });
     },
   });

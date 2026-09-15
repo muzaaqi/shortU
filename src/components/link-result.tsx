@@ -14,7 +14,7 @@ export interface LinkResultData {
   slug: string;
   originalUrl: string;
   shortUrl: string;
-  qrCode: string | null;
+  qrCode?: string | null | undefined;
 }
 
 interface LinkResultProps {
@@ -60,16 +60,16 @@ export const LinkResult = memo(function LinkResult({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="space-y-2 flex-1 min-w-0 w-full">
           {/* Slug output — terminal-prompt readout per DESIGN.md result-band spec */}
-        {includeQr && result.qrCode && (
-          <div className="shrink-0">
-            <QrPreview
-              qrCode={result.qrCode}
-              slug={result.slug}
-          
-              showDownload={true}
-            />
-          </div>
-        )}
+          {includeQr && (
+            <div className="shrink-0">
+              <QrPreview
+                url={result.shortUrl}
+                qrCode={result.qrCode}
+                slug={result.slug}
+                showDownload={true}
+              />
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2 rounded-sm bg-accent px-3 py-2">
             <div className="flex items-baseline gap-2 min-w-0">
               <span className="font-mono text-lg text-brand-accent select-none" aria-hidden="true">
