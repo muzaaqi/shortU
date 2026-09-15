@@ -8,6 +8,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import {
+  type ExpirationDuration,
+  calculateExpirationDate,
+  isLinkExpired,
+} from "~/lib/expiration";
 import { deepValidateUrl } from "~/lib/schema";
 import { generateSlug, validateSlug } from "~/lib/slugify";
 import { normalizeInputUrl } from "~/lib/utils";
@@ -25,6 +30,8 @@ export interface CreateLinkInput {
   customSlug?: string | undefined;
   randomSlug?: string | undefined;
   adEnabled?: boolean | undefined;
+  expiresIn?: ExpirationDuration | undefined;
+  maxClicks?: number | undefined;
 }
 
 /**
@@ -61,7 +68,7 @@ export const getAppOrigin = createServerFn({ method: "GET" }).handler(async () =
 /**
  * Creates a new short link.
  * Validates original URL and optional custom slug, checks collision,
- * generates QR code, and persists record to Neon PostgreSQL.
+ * calculates expiration, and persists record to Neon PostgreSQL.
  * Used by: src/components/shorten-dialog.tsx
  */
 export const createLink = createServerFn({ method: "POST" })
@@ -95,11 +102,18 @@ export const createLink = createServerFn({ method: "POST" })
       }
     }
 
+    let validatedMaxClicks: number | undefined;
+    if (data.maxClicks && data.maxClicks > 0) {
+      validatedMaxClicks = Math.min(Math.floor(data.maxClicks), 1000000);
+    }
+
     return {
       originalUrl: normalized,
       customSlug: data.customSlug?.trim() || undefined,
       randomSlug: validatedRandomSlug,
       adEnabled: Boolean(data.adEnabled),
+      expiresIn: data.expiresIn,
+      maxClicks: validatedMaxClicks,
     };
   })
   .handler(async ({ data }) => {
@@ -131,6 +145,7 @@ export const createLink = createServerFn({ method: "POST" })
 
     const id = nanoid();
     const now = new Date();
+    const expiresAt = calculateExpirationDate(data.expiresIn, now);
 
     const [newLink] = await db
       .insert(links)
@@ -141,6 +156,8 @@ export const createLink = createServerFn({ method: "POST" })
         originalUrl: data.originalUrl,
         adEnabled: data.adEnabled,
         clickCount: 0,
+        expiresAt,
+        maxClicks: data.maxClicks ?? null,
         createdAt: now,
         updatedAt: now,
       })
@@ -160,6 +177,7 @@ export const createLink = createServerFn({ method: "POST" })
 /**
  * Looks up a shortened link by its slug.
  * Checks fast in-memory cache first to avoid Neon cold starts and latency on hot paths.
+ * Returns null if the link does not exist or is expired / click-capped.
  * Used by: src/routes/$slug.tsx, src/routes/go.$slug.tsx
  */
 export const getLinkBySlug = createServerFn({ method: "GET" })
@@ -170,6 +188,10 @@ export const getLinkBySlug = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const cached = getCachedLink(data.slug);
     if (cached !== undefined) {
+      if (cached && isLinkExpired(cached)) {
+        invalidateCachedLink(data.slug);
+        return null;
+      }
       return cached;
     }
 
@@ -178,9 +200,18 @@ export const getLinkBySlug = createServerFn({ method: "GET" })
       .from(links)
       .where(eq(links.slug, data.slug));
 
-    const result = link || null;
-    setCachedLink(data.slug, result);
-    return result;
+    if (!link) {
+      setCachedLink(data.slug, null);
+      return null;
+    }
+
+    if (isLinkExpired(link)) {
+      setCachedLink(data.slug, null);
+      return null;
+    }
+
+    setCachedLink(data.slug, link);
+    return link;
   });
 
 /**

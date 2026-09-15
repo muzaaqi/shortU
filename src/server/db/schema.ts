@@ -81,12 +81,15 @@ export const links = pgTable(
     originalUrl: text("original_url").notNull(),
     adEnabled: boolean("ad_enabled").notNull().default(false),
     clickCount: integer("click_count").notNull().default(0),
+    expiresAt: timestamp("expires_at"),
+    maxClicks: integer("max_clicks"),
     createdAt: timestamp("created_at").notNull(),
     updatedAt: timestamp("updated_at").notNull(),
   },
   (table) => [
     index("links_user_id_idx").on(table.userId),
     index("links_user_id_created_at_idx").on(table.userId, table.createdAt),
+    index("links_expires_at_idx").on(table.expiresAt),
   ],
 );
 

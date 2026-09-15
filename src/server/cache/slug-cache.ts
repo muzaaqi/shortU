@@ -12,6 +12,8 @@ export interface CachedLinkData {
   adEnabled: boolean;
   userId: string | null;
   clickCount: number;
+  expiresAt?: Date | string | null | undefined;
+  maxClicks?: number | null | undefined;
   createdAt: Date;
   updatedAt: Date;
 }

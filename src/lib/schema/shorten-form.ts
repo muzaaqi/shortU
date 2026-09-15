@@ -198,6 +198,15 @@ export const shortenFormSchema = z.object({
       (val) => !val || !RESERVED_SLUGS.includes(val),
       "This custom slug is reserved",
     ),
+
+  expiresIn: z.enum(["1h", "24h", "7d", "30d", "never"]).optional(),
+
+  maxClicks: z
+    .number()
+    .int("Max clicks must be a whole number")
+    .positive("Max clicks must be greater than 0")
+    .max(1000000, "Max clicks cannot exceed 1,000,000")
+    .optional(),
 });
 
 /** Inferred form values type — the only shape ShortenDialog's form handles. */

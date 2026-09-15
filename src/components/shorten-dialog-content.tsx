@@ -82,9 +82,11 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
       return createLink({
         data: {
           originalUrl: normalized,
-          ...(isCustomSlug && values.customSlug.trim()
+          ...(isCustomSlug && values.customSlug?.trim()
             ? { customSlug: values.customSlug.trim() }
             : { randomSlug }),
+          expiresIn: values.expiresIn,
+          maxClicks: values.maxClicks,
         },
       });
     },
@@ -103,7 +105,9 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
     defaultValues: {
       url: initialUrl,
       customSlug: "",
-    },
+      expiresIn: "never",
+      maxClicks: undefined,
+    } as ShortenFormValues,
     validators: {
       onSubmit: shortenFormSchema,
     },
@@ -304,6 +308,33 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
             </form.Field>
           )}
         </div>
+
+        {/* Link Expiration option */}
+        <form.Field name="expiresIn">
+          {(field) => (
+            <div className="flex items-center justify-between pt-1">
+              <Label htmlFor="expiration-select" className="text-sm font-medium text-foreground">
+                Link Expiration
+              </Label>
+              <select
+                id="expiration-select"
+                value={field.state.value ?? "never"}
+                onChange={(e) =>
+                  field.handleChange(
+                    e.target.value as ShortenFormValues["expiresIn"]
+                  )
+                }
+                className="h-9 rounded-md border border-border bg-card px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+              >
+                <option value="never">Never (Permanent)</option>
+                <option value="1h">1 Hour</option>
+                <option value="24h">24 Hours</option>
+                <option value="7d">7 Days</option>
+                <option value="30d">30 Days</option>
+              </select>
+            </div>
+          )}
+        </form.Field>
 
         {/* QR opt-in — label left, switch right */}
         <div className="flex items-center justify-between pt-1">
