@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { TopNav } from "~/components/top-nav";
+import { NotFoundPage } from "~/components/not-found-page";
 import appCss from "~/styles.css?url";
 
 /**
@@ -38,6 +39,7 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
+  notFoundComponent: NotFoundPage,
 });
 
 function RootComponent() {

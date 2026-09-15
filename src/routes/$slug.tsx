@@ -6,7 +6,7 @@
  * fire-and-forget promises are cancelled once the response flushes.
  * Used by: TanStack Router for route "/$slug"
  */
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { trackClick } from "~/server/functions/analytics";
 import { getLinkBySlug } from "~/server/functions/links";
 
@@ -16,9 +16,7 @@ export const Route = createFileRoute("/$slug")({
     const link = await getLinkBySlug({ data: { slug } });
 
     if (!link) {
-      throw redirect({
-        to: "/",
-      });
+      throw notFound();
     }
 
     if (link.adEnabled) {
