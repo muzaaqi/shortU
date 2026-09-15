@@ -76,13 +76,26 @@ const BLOCKED_PORTS = new Set([
 // URL validator helper
 // ---------------------------------------------------------------------------
 
+function getAppHostname(): string {
+  const envUrl =
+    (typeof process !== "undefined" ? process.env?.BETTER_AUTH_URL : undefined) ||
+    import.meta.env?.BETTER_AUTH_URL;
+  if (envUrl) {
+    try {
+      return new URL(envUrl).hostname.toLowerCase();
+    } catch {
+      return envUrl.toLowerCase();
+    }
+  }
+  return "shortu.muzaaqi.my.id";
+}
+
 /**
  * Deep-validates a URL string beyond what normalizeInputUrl checks.
  * Returns null on success, or an error message string on failure.
- * Called inside z.string().superRefine() so we can attach the exact
- * failure reason to the field error.
+ * Used by: shortenFormSchema (client form) and createLink (server validator)
  */
-function deepValidateUrl(raw: string): string | null {
+export function deepValidateUrl(raw: string): string | null {
   // 1. Length guard — browsers cap at ~2048; anything longer is suspicious
   if (raw.length > URL_MAX_LENGTH) {
     return `URL must be ${URL_MAX_LENGTH} characters or fewer`;
@@ -92,12 +105,18 @@ function deepValidateUrl(raw: string): string | null {
   //    unicode control characters that can be used to obfuscate URLs
   const trimmed = raw.trim();
   // Reject null bytes, unicode direction overrides, zero-width chars
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional security check for URL obfuscation
   if (/[\u0000-\u001F\u007F\u200B-\u200D\u2028\u2029\uFEFF\u202A-\u202E]/.test(trimmed)) {
     return "URL contains invalid characters";
   }
 
-  // 3. Normalize + parse via browser URL API (same as normalizeInputUrl, but
-  //    we need the parsed object for further checks)
+  // 3. Protocol allowlist check for known blocked protocols first
+  const lowerRaw = trimmed.toLowerCase();
+  if (BLOCKED_PROTOCOLS.some((p) => lowerRaw.startsWith(p))) {
+    return "This type of URL cannot be shortened";
+  }
+
+  // 4. Normalize + parse via browser URL API
   const normalized = normalizeInputUrl(trimmed);
   if (!normalized) return "Please enter a valid URL";
 
@@ -108,13 +127,8 @@ function deepValidateUrl(raw: string): string | null {
     return "Please enter a valid URL";
   }
 
-  // 4. Protocol allowlist — only http: and https: are accepted
+  // 5. Only http: and https: are accepted
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    // Check against known blocked protocols first for a clearer message
-    const lowerRaw = trimmed.toLowerCase();
-    if (BLOCKED_PROTOCOLS.some((p) => lowerRaw.startsWith(p))) {
-      return "This type of URL cannot be shortened";
-    }
     return "Only http:// and https:// URLs are supported";
   }
 
@@ -147,9 +161,9 @@ function deepValidateUrl(raw: string): string | null {
   }
 
   // 10. Reject URLs that resolve to the app itself (self-referential short links
-  //     that create redirect loops). Replace with your actual production domain.
-  const APP_HOSTNAME = import.meta.env.BETTER_AUTH_URL ?? "shortu.muzaaqi.my.id";
-  if (hostname === APP_HOSTNAME || hostname.endsWith(`.${APP_HOSTNAME}`)) {
+  //     that create redirect loops).
+  const appHost = getAppHostname();
+  if (hostname === appHost || hostname.endsWith(`.${appHost}`)) {
     return "You cannot shorten a shortU link";
   }
 

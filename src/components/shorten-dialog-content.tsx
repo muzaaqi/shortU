@@ -84,7 +84,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
           originalUrl: normalized,
           ...(isCustomSlug && values.customSlug.trim()
             ? { customSlug: values.customSlug.trim() }
-            : {}),
+            : { randomSlug }),
         },
       });
     },
@@ -348,7 +348,7 @@ export const ShortenDialogContent = memo(function ShortenDialogContent({
             Close
           </Button>
           <Button onClick={handleReset} className="cursor-pointer">
-            Short Antoher
+            Shorten Another
           </Button>
       </>
         ) : (

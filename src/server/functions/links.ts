@@ -9,15 +9,18 @@ import { getRequest } from "@tanstack/react-start/server";
 import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { generateQR } from "~/lib/qr";
+import { deepValidateUrl } from "~/lib/schema";
 import { generateSlug, validateSlug } from "~/lib/slugify";
+import { normalizeInputUrl } from "~/lib/utils";
+import { getCurrentSession } from "~/server/auth/session";
 import { db } from "~/server/db";
 import { links } from "~/server/db/schema";
-import { getCurrentSession } from "~/server/auth/session";
 
 export interface CreateLinkInput {
   originalUrl: string;
-  customSlug?: string;
-  adEnabled?: boolean;
+  customSlug?: string | undefined;
+  randomSlug?: string | undefined;
+  adEnabled?: boolean | undefined;
 }
 
 /**
@@ -63,15 +66,14 @@ export const createLink = createServerFn({ method: "POST" })
       throw new Error("A valid destination URL is required.");
     }
 
-    let url = data.originalUrl.trim();
-    if (!/^https?:\/\//i.test(url)) {
-      url = `https://${url}`;
+    const validationError = deepValidateUrl(data.originalUrl);
+    if (validationError) {
+      throw new Error(validationError);
     }
 
-    try {
-      new URL(url);
-    } catch {
-      throw new Error("Invalid URL format. Please enter a valid web address.");
+    const normalized = normalizeInputUrl(data.originalUrl);
+    if (!normalized) {
+      throw new Error("Invalid destination URL format.");
     }
 
     if (data.customSlug) {
@@ -81,31 +83,22 @@ export const createLink = createServerFn({ method: "POST" })
       }
     }
 
+    let validatedRandomSlug: string | undefined;
+    if (data.randomSlug) {
+      const check = validateSlug(data.randomSlug.trim());
+      if (check.valid) {
+        validatedRandomSlug = data.randomSlug.trim();
+      }
+    }
+
     return {
-      originalUrl: url,
+      originalUrl: normalized,
       customSlug: data.customSlug?.trim() || undefined,
+      randomSlug: validatedRandomSlug,
       adEnabled: Boolean(data.adEnabled),
     };
   })
   .handler(async ({ data }) => {
-    let slug = data.customSlug;
-    if (!slug) {
-      slug = generateSlug();
-    }
-
-    // Check slug collision
-    const existing = (await db.select().from(links).where(eq(links.slug, slug)))[0];
-
-    if (existing) {
-      throw new Error("This slug is already taken. Please choose a different one.");
-    }
-
-    // Determine host origin for short URL
-    const origin = await resolveOrigin();
-
-    const shortUrl = `${origin}/${slug}`;
-    const qrCode = await generateQR(shortUrl);
-
     // Check optional authenticated user session
     const session = await getCurrentSession();
     const userId = session?.user?.id || null;
@@ -113,6 +106,25 @@ export const createLink = createServerFn({ method: "POST" })
     if (data.customSlug && !userId) {
       throw new Error("Custom slug aliases require signing in to shortU.");
     }
+
+    let slug = data.customSlug || data.randomSlug || generateSlug();
+
+    // Check slug collision
+    const existing = (await db.select().from(links).where(eq(links.slug, slug)))[0];
+
+    if (existing) {
+      if (data.customSlug) {
+        throw new Error("This slug is already taken. Please choose a different one.");
+      }
+      // If random/suggested slug collided, generate a fresh guaranteed-unique slug
+      slug = generateSlug();
+    }
+
+    // Determine host origin for short URL
+    const origin = await resolveOrigin();
+
+    const shortUrl = `${origin}/${slug}`;
+    const qrCode = await generateQR(shortUrl);
 
     const id = nanoid();
     const now = new Date();

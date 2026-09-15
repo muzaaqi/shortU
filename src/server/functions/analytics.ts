@@ -3,6 +3,7 @@
  * Used by: src/routes/$slug.tsx, src/routes/go.$slug.tsx, src/routes/dashboard.tsx
  */
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "~/server/db";
@@ -30,6 +31,16 @@ export const trackClick = createServerFn({ method: "POST" })
     try {
       if (!data.linkId) return { success: false };
 
+      let userAgent = data.userAgent;
+      if (!userAgent) {
+        try {
+          const req = getRequest();
+          userAgent = req?.headers.get("user-agent") || undefined;
+        } catch {
+          // No active request context
+        }
+      }
+
       const clickId = nanoid();
       const now = new Date();
 
@@ -41,7 +52,7 @@ export const trackClick = createServerFn({ method: "POST" })
           id: clickId,
           linkId: data.linkId,
           clickedAt: now,
-          userAgent: data.userAgent ?? null,
+          userAgent: userAgent ?? null,
         }),
         db
           .update(links)
